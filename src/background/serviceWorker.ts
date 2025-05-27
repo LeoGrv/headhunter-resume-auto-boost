@@ -1954,8 +1954,25 @@ async function handleRefreshTabs(
   sendResponse: (response: any) => void
 ): Promise<void> {
   try {
+    console.log('🔄 ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ТАБОВ ЗАПУЩЕНО');
+
+    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем кеш перед обновлением
+    performanceOptimizer.setCache('managed_tabs_discovery', [], 0);
+    
+    // Принудительно обновляем список табов
+    await updateTabList();
+    
+    // Заново обнаруживаем и управляем табами
     await discoverAndManageTabs();
-    sendResponse({ success: true });
+
+    const managedTabs = getManagedTabsSync();
+    console.log(`✅ ОБНОВЛЕНИЕ ЗАВЕРШЕНО: найдено ${managedTabs.length} табов`);
+
+    sendResponse({ 
+      success: true, 
+      message: `Tabs refreshed successfully - found ${managedTabs.length} resume tabs`,
+      data: { managedTabsCount: managedTabs.length }
+    });
   } catch (error) {
     console.error('Failed to refresh tabs:', error);
     sendResponse({

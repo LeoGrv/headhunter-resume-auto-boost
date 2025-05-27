@@ -51,12 +51,12 @@ export async function initializeTabManager(): Promise<void> {
  */
 export async function findResumeTabs(): Promise<chrome.tabs.Tab[]> {
   try {
-    console.log('🔍 Searching for HeadHunter resume tabs...');
+    console.log('🔍 АГРЕССИВНЫЙ ПОИСК ТАБОВ С РЕЗЮМЕ НАЧАТ...');
 
     // Try multiple approaches to get tabs
     let allTabs: chrome.tabs.Tab[] = [];
 
-    // Method 1: Get all tabs from all windows
+    // Method 1: Get all tabs from all windows (most comprehensive)
     try {
       allTabs = await chrome.tabs.query({});
       console.log(
@@ -98,28 +98,50 @@ export async function findResumeTabs(): Promise<chrome.tabs.Tab[]> {
       }
     }
 
+    // Method 4: Direct query for HH tabs
+    if (allTabs.length === 0) {
+      try {
+        const hhTabs = await chrome.tabs.query({ url: "*://*.hh.kz/*" });
+        const hhRuTabs = await chrome.tabs.query({ url: "*://*.hh.ru/*" });
+        allTabs = [...hhTabs, ...hhRuTabs];
+        console.log(
+          `📋 Method 4 - Found ${allTabs.length} HH tabs directly`
+        );
+      } catch (error) {
+        console.error('Method 4 failed:', error);
+      }
+    }
+
     // Log all tab URLs for debugging
     console.log('🔍 All tab URLs:');
     allTabs.forEach((tab, index) => {
-      console.log(`  ${index + 1}. ${tab.url} (ID: ${tab.id})`);
+      console.log(`  ${index + 1}. ${tab.url} (ID: ${tab.id}) - Status: ${tab.status}, Discarded: ${tab.discarded}`);
     });
 
-    // Filter for HeadHunter resume tabs using our improved function
+    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Более мягкие критерии фильтрации
     const resumeTabs = allTabs.filter(tab => {
-      if (!tab.url || tab.id === undefined) return false;
+      if (!tab.url || tab.id === undefined) {
+        console.log(`❌ Skipping tab with no URL or ID: ${tab.title}`);
+        return false;
+      }
 
-      // Additional validation: check if tab is not discarded/suspended
-      const isValidTab = !tab.discarded && tab.status !== 'unloaded';
+      // ✅ ИСПРАВЛЕНИЕ: Убираем строгую проверку статуса - принимаем любые табы кроме полностью мертвых
+      const isValidTab = tab.status !== 'unloaded' && !tab.discarded;
       const isResume = isResumeUrl(tab.url);
 
-      if (isResume && isValidTab) {
-        console.log(
-          `✅ Found valid resume tab: ${tab.title} (${tab.url}) - Status: ${tab.status}`
-        );
-      } else if (isResume && !isValidTab) {
-        console.log(
-          `⚠️ Found resume tab but invalid state: ${tab.title} (${tab.url}) - Status: ${tab.status}, Discarded: ${tab.discarded}`
-        );
+      if (isResume) {
+        if (isValidTab) {
+          console.log(
+            `✅ НАЙДЕН ВАЛИДНЫЙ ТАБ С РЕЗЮМЕ: ${tab.title} (${tab.url}) - Status: ${tab.status}`
+          );
+        } else {
+          console.log(
+            `⚠️ НАЙДЕН ТАБ С РЕЗЮМЕ НО НЕВАЛИДНОЕ СОСТОЯНИЕ: ${tab.title} (${tab.url}) - Status: ${tab.status}, Discarded: ${tab.discarded}`
+          );
+          // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Включаем даже "проблемные" табы если это резюме
+          console.log(`🔄 ПРИНИМАЕМ ТАБ НЕСМОТРЯ НА СОСТОЯНИЕ`);
+          return true;
+        }
       } else {
         // Log why it's not a resume tab
         if (tab.url.includes('hh.kz') || tab.url.includes('hh.ru')) {
@@ -127,16 +149,35 @@ export async function findResumeTabs(): Promise<chrome.tabs.Tab[]> {
         }
       }
 
-      return isResume && isValidTab;
+      return isResume; // ✅ Убираем проверку isValidTab - принимаем все резюме
     });
 
-    console.log(`🎯 Found ${resumeTabs.length} HeadHunter resume tabs`);
+    console.log(`🎯 НАЙДЕНО ${resumeTabs.length} ТАБОВ С РЕЗЮМЕ HEADHUNTER`);
 
-    // Limit to maximum 2 tabs (as per requirements)
-    const limitedTabs = resumeTabs.slice(0, 2);
+    // ✅ ИСПРАВЛЕНИЕ: Увеличиваем лимит до 5 табов вместо 2
+    const limitedTabs = resumeTabs.slice(0, 5);
 
     if (limitedTabs.length !== resumeTabs.length) {
-      console.log(`⚠️ Limited to ${limitedTabs.length} tabs (max 2 allowed)`);
+      console.log(`⚠️ Limited to ${limitedTabs.length} tabs (max 5 allowed)`);
+    }
+
+    // Дополнительная диагностика
+    if (limitedTabs.length === 0) {
+      console.log('❌ НЕ НАЙДЕНО НИ ОДНОГО ТАБА С РЕЗЮМЕ!');
+      console.log('🔍 ДИАГНОСТИКА:');
+      
+             const hhTabs = allTabs.filter(tab => 
+         tab.url && (tab.url.includes('hh.kz') || tab.url.includes('hh.ru'))
+       );
+       
+       console.log(`📋 Всего HH табов: ${hhTabs.length}`);
+       hhTabs.forEach((tab, index) => {
+         const tabUrl = tab.url || '';
+         console.log(`  ${index + 1}. ${tab.title}`);
+         console.log(`     URL: ${tabUrl}`);
+         console.log(`     Содержит /resume/: ${tabUrl.includes('/resume/')}`);
+         console.log(`     isResumeUrl result: ${isResumeUrl(tabUrl)}`);
+       });
     }
 
     return limitedTabs;
