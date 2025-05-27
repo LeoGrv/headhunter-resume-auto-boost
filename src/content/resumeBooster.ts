@@ -7,22 +7,36 @@ console.log('HeadHunter Resume Auto-Boost Extension: Content script loaded');
 
 // Button selectors (multiple fallbacks for different page layouts)
 const BUTTON_SELECTORS = [
+  // Modern HH selectors (2024)
   'button[data-qa="resume-update-button"]',
-  'button[data-qa="resume-boost-button"]',
+  'button[data-qa="resume-boost-button"]', 
   'button[data-qa="resume-raise-button"]',
+  'button[data-qa="resume-refresh-button"]',
+  'button[data-qa="resume-promote-button"]',
+  
+  // Legacy selectors
+  'a[data-qa="resume-update-button"]',
+  '.resume-update-button',
+  '.boost-button',
+  '.resume-raise-button',
+  
+  // Generic class-based selectors
+  '[class*="resume"][class*="update"]',
+  '[class*="resume"][class*="boost"]',
+  '[class*="resume"][class*="raise"]',
+  '[class*="resume"][class*="refresh"]',
+  '[class*="resume"][class*="promote"]',
+  
+  // Text-based selectors (will be handled manually)
   'button:contains("Поднять в поиске")',
   'button:contains("Поднять резюме")',
   'button:contains("Поднять")',
   'button:contains("Обновить")',
-  'a[data-qa="resume-update-button"]',
+  'button:contains("Продвинуть")',
+  'button:contains("Refresh")',
   'a:contains("Поднять в поиске")',
   'a:contains("Поднять резюме")',
-  '.resume-update-button',
-  '.boost-button',
-  '.resume-raise-button',
-  '[class*="resume"][class*="update"]',
-  '[class*="resume"][class*="boost"]',
-  '[class*="resume"][class*="raise"]',
+  'a:contains("Поднять")',
 ];
 
 // State management
@@ -56,8 +70,15 @@ function initialize(): void {
       console.error('Failed to setup page refresh:', error);
     });
 
-    // Initial button check
-    checkButtonState();
+    // Initial button check with delay to ensure page is loaded
+    setTimeout(() => {
+      checkButtonState();
+      console.log('Initial button state check completed');
+    }, 1000);
+
+    // Additional checks with increasing delays
+    setTimeout(() => checkButtonState(), 3000);
+    setTimeout(() => checkButtonState(), 5000);
 
     isInitialized = true;
     console.log('HeadHunter Resume Auto-Boost: Content script initialized');
@@ -106,21 +127,47 @@ function findBoostButton(): HTMLElement | null {
     }
   }
 
-  // Debug: log all buttons on the page
-  const allButtons = document.querySelectorAll(
-    'button, a[role="button"], [class*="button"]'
+  // Aggressive search: look for any button/link with boost-related text
+  console.log('Performing aggressive search for boost button...');
+  const allClickableElements = document.querySelectorAll(
+    'button, a, [role="button"], [class*="button"], [class*="btn"], span[onclick], div[onclick]'
   );
-  console.log(
-    `No boost button found. Total buttons/links on page: ${allButtons.length}`
-  );
+  
+  console.log(`Searching through ${allClickableElements.length} clickable elements...`);
+  
+  const boostKeywords = [
+    'поднять', 'boost', 'raise', 'update', 'обновить', 'продвинуть', 'refresh'
+  ];
+  
+  for (let i = 0; i < allClickableElements.length; i++) {
+    const element = allClickableElements[i] as HTMLElement;
+    const text = element.textContent?.toLowerCase().trim() || '';
+    const dataQa = element.getAttribute('data-qa')?.toLowerCase() || '';
+    const className = element.className?.toLowerCase() || '';
+    
+    // Check if element contains boost-related keywords
+    for (const keyword of boostKeywords) {
+      if (text.includes(keyword) || dataQa.includes(keyword) || className.includes(keyword)) {
+        console.log(`Found potential boost button via keyword "${keyword}":`, {
+          element,
+          text: element.textContent?.trim(),
+          dataQa: element.getAttribute('data-qa'),
+          className: element.className
+        });
+        return element;
+      }
+    }
+  }
 
-  if (allButtons.length > 0) {
-    console.log('Available buttons/links:');
-    allButtons.forEach((btn, index) => {
-      if (index < 10) {
-        // Log first 10 buttons
+  // Debug: log all buttons on the page
+  console.log(`No boost button found. Total clickable elements on page: ${allClickableElements.length}`);
+
+  if (allClickableElements.length > 0) {
+    console.log('Available clickable elements (first 15):');
+    allClickableElements.forEach((btn, index) => {
+      if (index < 15) {
         console.log(
-          `  ${index + 1}. Text: "${btn.textContent?.trim()}", Classes: "${btn.className}", Data-qa: "${btn.getAttribute('data-qa')}"`
+          `  ${index + 1}. Text: "${btn.textContent?.trim()}", Classes: "${btn.className}", Data-qa: "${btn.getAttribute('data-qa')}", Tag: "${btn.tagName}"`
         );
       }
     });
