@@ -5,6 +5,9 @@ import { BackgroundMessage, ContentMessage } from '../utils/types';
 
 console.log('HeadHunter Resume Auto-Boost Extension: Content script loaded');
 
+// ✅ ДИАГНОСТИЧЕСКИЙ ФЛАГ для проверки загрузки content script
+(window as any).resumeBoosterLoaded = true;
+
 // Button selectors (multiple fallbacks for different page layouts)
 const BUTTON_SELECTORS = [
   // Modern HH selectors (2024)
