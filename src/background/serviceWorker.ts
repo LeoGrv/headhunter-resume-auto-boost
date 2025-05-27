@@ -88,10 +88,10 @@ async function sendMessageWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(
-        `📤 Attempt ${attempt}/${maxRetries}: Sending message to tab ${tabId}:`,
-        message.type
-      );
+      // Only log first and last attempts to reduce noise
+      if (attempt === 1 || attempt === maxRetries) {
+        console.log(`📤 Sending ${message.type} to tab ${tabId} (attempt ${attempt}/${maxRetries})`);
+      }
 
       // Check if tab still exists before sending message
       const tabInfo = await chrome.tabs.get(tabId);
@@ -103,16 +103,18 @@ async function sendMessageWithRetry(
         tabId,
         message
       )) as ContentMessage;
-      console.log(
-        `✅ Message sent successfully to tab ${tabId} on attempt ${attempt}`
-      );
+      
+      if (attempt > 1) {
+        console.log(`✅ Message sent successfully to tab ${tabId} on attempt ${attempt}`);
+      }
       return response;
     } catch (error) {
       lastError = error as Error;
-      console.warn(
-        `⚠️ Attempt ${attempt}/${maxRetries} failed for tab ${tabId}:`,
-        error
-      );
+      
+      // Only log warnings for retries, not every attempt
+      if (attempt === maxRetries) {
+        console.warn(`❌ All attempts failed for tab ${tabId}:`, error);
+      }
 
       // If this is the last attempt, don't wait
       if (attempt === maxRetries) {
@@ -121,7 +123,6 @@ async function sendMessageWithRetry(
 
       // Wait before retry (exponential backoff)
       const delay = retryDelay * Math.pow(2, attempt - 1);
-      console.log(`⏳ Waiting ${delay}ms before retry ${attempt + 1}...`);
       await new Promise(resolve => setTimeout(resolve, delay));
 
       // Try to inject content script again before retry
@@ -130,23 +131,16 @@ async function sendMessageWithRetry(
           target: { tabId: tabId },
           files: ['content/resumeBooster.js'],
         });
-        console.log(
-          `🔄 Content script re-injected for tab ${tabId} before retry ${attempt + 1}`
-        );
       } catch (injectionError) {
-        console.log(
-          `ℹ️ Content script re-injection failed for tab ${tabId}:`,
-          injectionError
-        );
+        // Silent retry injection - only log if it's the last attempt
+        if (attempt === maxRetries - 1) {
+          console.log(`⚠️ Content script re-injection failed for tab ${tabId}`);
+        }
       }
     }
   }
 
   // All retries failed
-  console.error(
-    `❌ All ${maxRetries} attempts failed for tab ${tabId}. Last error:`,
-    lastError
-  );
   throw (
     lastError ||
     new Error(
@@ -188,15 +182,21 @@ class CircuitBreaker {
     this.failures.set(tabId, currentFailures + 1);
     this.lastFailureTime.set(tabId, Date.now());
 
-    console.log(
-      `🔴 Circuit breaker recorded failure for tab ${tabId}: ${currentFailures + 1}/${this.maxFailures}`
-    );
+    // Only log when circuit opens (reaches max failures)
+    if (currentFailures + 1 >= this.maxFailures) {
+      console.log(`🔴 Circuit breaker OPENED for tab ${tabId} (${currentFailures + 1} failures)`);
+    }
   }
 
   recordSuccess(tabId: number): void {
+    const hadFailures = (this.failures.get(tabId) || 0) > 0;
     this.failures.set(tabId, 0);
     this.lastFailureTime.delete(tabId);
-    console.log(`🟢 Circuit breaker reset for tab ${tabId}`);
+    
+    // Only log if there were previous failures
+    if (hadFailures) {
+      console.log(`🟢 Circuit breaker reset for tab ${tabId}`);
+    }
   }
 
   getStatus(tabId: number): {
@@ -241,36 +241,85 @@ class ErrorRecoverySystem {
     }
 
     this.recoveryAttempts.set(tabId, attempts + 1);
-    console.log(
-      `🔄 Recovery attempt ${attempts + 1}/${this.maxRecoveryAttempts} for tab ${tabId}, original error: ${error.message}`
-    );
+    console.log(`🔄 Recovery attempt ${attempts + 1}/${this.maxRecoveryAttempts} for tab ${tabId}`);
 
     try {
-      // Recovery strategy 1: Verify tab still exists
-      const tabInfo = await chrome.tabs.get(tabId);
-      if (!tabInfo || !tabInfo.url || !isValidResumeUrl(tabInfo.url)) {
-        console.log(`❌ Tab ${tabId} no longer valid during recovery`);
-        await this.cleanupTab(tabId);
-        return false;
-      }
+      // ✅ НОВОЕ: Специальная обработка ошибок разрешений
+      const errorMessage = error.message;
+      const isPermissionError = errorMessage.includes('Cannot access contents of the page') || 
+                               errorMessage.includes('Extension manifest must request permission');
+      
+      if (isPermissionError) {
+        console.log(`🔒 Permission error detected for tab ${tabId}, attempting reload...`);
+        
+        // Проверяем состояние вкладки
+        const tabInfo = await chrome.tabs.get(tabId);
+        if (!tabInfo || !tabInfo.url) {
+          await this.cleanupTab(tabId);
+          return false;
+        }
+        
+        // Проверяем валидность URL
+        if (!isValidResumeUrl(tabInfo.url)) {
+          await this.cleanupTab(tabId);
+          return false;
+        }
+        
+        // Ждём полной загрузки вкладки
+        if (tabInfo.status !== 'complete') {
+          let waitAttempts = 0;
+          while (waitAttempts < 10) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const updatedTab = await chrome.tabs.get(tabId);
+            if (updatedTab.status === 'complete') {
+              break;
+            }
+            waitAttempts++;
+          }
+        }
+        
+        // Пробуем обновить вкладку для сброса состояния
+        await chrome.tabs.reload(tabId);
+        
+        // Ждём загрузки после обновления
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        // Проверяем состояние после обновления
+        const reloadedTab = await chrome.tabs.get(tabId);
+        if (!reloadedTab.url || !isValidResumeUrl(reloadedTab.url)) {
+          await this.cleanupTab(tabId);
+          return false;
+        }
+        
+        // Пробуем инъекцию после обновления
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content/resumeBooster.js'],
+        });
+        
+      } else {
+        // Обычная recovery стратегия для других ошибок
+        
+        // Recovery strategy 1: Verify tab still exists
+        const tabInfo = await chrome.tabs.get(tabId);
+        if (!tabInfo || !tabInfo.url || !isValidResumeUrl(tabInfo.url)) {
+          await this.cleanupTab(tabId);
+          return false;
+        }
 
-      // Recovery strategy 2: Re-inject content script
-      await chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        files: ['content/resumeBooster.js'],
-      });
-      console.log(
-        `✅ Content script re-injected during recovery for tab ${tabId}`
-      );
+        // Recovery strategy 2: Re-inject content script
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content/resumeBooster.js'],
+        });
+      }
 
       // ✅ ИСПРАВЛЕНИЕ: Recovery с пользовательским интервалом
       const settings = await getSettings();
       const recoveryInterval = settings.clickInterval * 60 * 1000; // ✅ Тот же интервал
       await persistentAlarmManager.startTimer(tabId, recoveryInterval);
 
-      console.log(
-        `✅ Recovery successful for tab ${tabId} with user interval (${settings.clickInterval}min)`
-      );
+      console.log(`✅ Recovery successful for tab ${tabId}`);
 
       await addLogEntry({
         level: 'info',
@@ -280,10 +329,7 @@ class ErrorRecoverySystem {
 
       return true;
     } catch (recoveryError) {
-      console.error(
-        `❌ Recovery attempt ${attempts + 1} failed for tab ${tabId}:`,
-        recoveryError
-      );
+      console.error(`❌ Recovery attempt ${attempts + 1} failed for tab ${tabId}:`, recoveryError);
 
       await addLogEntry({
         level: 'error',
@@ -1121,17 +1167,9 @@ async function discoverAndManageTabs(): Promise<void> {
     // Start timers for discovered and active tabs
     if (!globalPaused) {
       const settings = await getSettings();
-      const intervalMs = settings.clickInterval * 60 * 1000; // Convert minutes to milliseconds
-
-      console.log(
-        `🚀 Starting timers for ${managedTabs.length} tabs (globalPaused: ${globalPaused})`
-      );
+      const intervalMs = settings.clickInterval * 60 * 1000;
 
       for (const tab of managedTabs) {
-        console.log(
-          `🔍 Processing tab ${tab.tabId} (${tab.title}) in state: ${tab.state}`
-        );
-
         // Only start timers for tabs that are not paused, in error state
         if (
           tab.state === TabState.DISCOVERED ||
@@ -1139,16 +1177,10 @@ async function discoverAndManageTabs(): Promise<void> {
         ) {
           // Check if timer is already running
           const timerStatus = persistentAlarmManager.getTimerStatus(tab.tabId);
-          console.log(`⏰ Timer status for tab ${tab.tabId}:`, timerStatus);
 
-          // ✅ CRITICAL FIX: Always ensure timer is running for active tabs
-          // This handles cases where Service Worker restarted and timers need restoration
-          // The condition checks both isActive (timer running) and exists (alarm exists in Chrome)
-          // This dual check ensures we catch all edge cases of timer loss
+          // Always ensure timer is running for active tabs
           if (!timerStatus.isActive || !timerStatus.exists) {
-            console.log(
-              `🚀 Starting/Restoring timer for tab ${tab.tabId}: ${tab.title}`
-            );
+            console.log(`🚀 Starting timer for tab ${tab.tabId}: ${tab.title}`);
 
             // Update state to active and start timer
             await updateTabState(tab.tabId, TabState.ACTIVE);
@@ -1159,25 +1191,11 @@ async function discoverAndManageTabs(): Promise<void> {
               message: `Started timer for tab: ${tab.title} (${settings.clickInterval} min interval)`,
               tabId: tab.tabId,
             });
-
-            console.log(
-              `✅ Timer started successfully for tab ${tab.tabId}: ${tab.title}`
-            );
-          } else {
-            console.log(
-              `⏰ Timer already active for tab ${tab.tabId}: ${tab.title} (${timerStatus.remainingFormatted} remaining)`
-            );
           }
-        } else {
-          console.log(
-            `⏭️ Skipping timer for tab ${tab.tabId} in state: ${tab.state}`
-          );
         }
       }
 
-      console.log(
-        `✅ Timer initialization completed for ${managedTabs.length} tabs`
-      );
+      console.log(`✅ Timer initialization completed for ${managedTabs.length} tabs`);
     } else {
       console.log('⏸️ Extension is globally paused, not starting timers');
     }
@@ -1251,35 +1269,25 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
   const startTime = Date.now();
 
   // ✅ CRITICAL: Prevent concurrent processing of the same tab
-  // This lock ensures that if multiple timers fire simultaneously for the same tab,
-  // only one execution proceeds while others are safely skipped
   if (processingTabs.has(tabId)) {
-    console.warn(
-      `⚠️ Tab ${tabId} is already being processed by Service Worker, skipping duplicate`
-    );
+    console.warn(`⚠️ Tab ${tabId} already being processed, skipping`);
     return;
   }
 
   processingTabs.add(tabId);
 
   try {
-    console.log(
-      `🎯 [${new Date().toLocaleTimeString()}] Timer expired for tab ${tabId}, attempting to click boost button - SERVICE WORKER PROCESSING STARTED`
-    );
+    console.log(`🎯 Timer expired for tab ${tabId} - processing...`);
 
     // Check if globally paused
     if (globalPaused) {
-      console.log('Extension is globally paused, skipping button click');
       return;
     }
 
-    // Check circuit breaker - prevents overwhelming tabs with repeated failures
-    // If a tab has failed too many times recently, we skip it and wait for the circuit to reset
+    // Check circuit breaker
     if (circuitBreaker.isOpen(tabId)) {
       const status = circuitBreaker.getStatus(tabId);
-      console.log(
-        `🔴 Circuit breaker is open for tab ${tabId}, skipping (${status.failures} failures, ${Math.round((status.timeToReset || 0) / 60000)}min to reset)`
-      );
+      console.log(`🔴 Circuit breaker open for tab ${tabId} (${status.failures} failures)`);
 
       addLogEntryOptimized({
         level: 'warning',
@@ -1287,24 +1295,14 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         tabId: tabId,
       });
 
-      // ✅ ИСПРАВЛЕНИЕ: Используем пользовательский интервал даже для circuit breaker
       const settings = await getSettings();
-      const retryInterval = settings.clickInterval * 60 * 1000; // ✅ Тот же интервал
+      const retryInterval = settings.clickInterval * 60 * 1000;
       await persistentAlarmManager.startTimer(tabId, retryInterval);
       return;
     }
 
-    // Get tab info and log concurrent processing
+    // Get tab info
     const managedTabs = getManagedTabsSync();
-    const activeTabsCount = managedTabs.filter(
-      t => t.state === 'active'
-    ).length;
-    console.log(
-      `📊 Service Worker processing tab ${tabId} - Active managed tabs: ${activeTabsCount}, Total managed: ${managedTabs.length}`
-    );
-    console.log(
-      `📊 Currently processing tabs in Service Worker: [${Array.from(processingTabs).join(', ')}]`
-    );
     const tab = managedTabs.find(t => t.tabId === tabId);
 
     if (!tab) {
@@ -1314,7 +1312,6 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
 
     // Check if tab is paused
     if (tab.state === TabState.PAUSED) {
-      console.log(`Tab ${tabId} is paused, skipping button click`);
       return;
     }
 
@@ -1322,90 +1319,129 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
     let tabExists = false;
     try {
       const tabInfo = await chrome.tabs.get(tabId);
-      // Use the same validation logic as tabManager
       tabExists = !!tabInfo && !!tabInfo.url && isValidResumeUrl(tabInfo.url);
-      console.log(`Tab ${tabId} exists: ${tabExists}, URL: ${tabInfo?.url}`);
     } catch (tabError) {
-      console.warn(
-        `Tab ${tabId} no longer exists or is not accessible:`,
-        tabError
-      );
-      // Remove tab from management if it doesn't exist
+      console.warn(`Tab ${tabId} no longer exists:`, tabError);
       await updateTabState(tabId, TabState.REMOVED);
       await persistentAlarmManager.stopTimer(tabId);
       return;
     }
 
     if (!tabExists) {
-      console.warn(
-        `Tab ${tabId} is not a valid HeadHunter resume page, removing from management`
-      );
+      console.warn(`Tab ${tabId} is not a valid HeadHunter resume page`);
       await updateTabState(tabId, TabState.REMOVED);
       await persistentAlarmManager.stopTimer(tabId);
       return;
     }
 
-    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Принудительная инъекция content script
+    // ✅ Content script injection
     try {
-      console.log(`🔧 ПРИНУДИТЕЛЬНАЯ инъекция content script для tab ${tabId}`);
-      
-      // Сначала проверим, загружен ли content script
+      // Check if content script is already loaded
       let scriptLoaded = false;
       try {
         const testResponse = await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
         scriptLoaded = !!testResponse;
-        console.log(`📋 Content script уже загружен для tab ${tabId}: ${scriptLoaded}`);
       } catch (testError) {
-        console.log(`📋 Content script НЕ загружен для tab ${tabId}, инжектируем...`);
+        // Script not loaded, will inject
       }
       
-      // Принудительно инжектируем content script
-      await chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        files: ['content/resumeBooster.js'],
-      });
-      console.log(`✅ Content script ПРИНУДИТЕЛЬНО инжектирован для tab ${tabId}`);
+      // Inject if needed
+      if (!scriptLoaded) {
+        const tabInfo = await chrome.tabs.get(tabId);
+        if (!tabInfo || !tabInfo.url) {
+          throw new Error(`Tab ${tabId} does not exist or has no URL`);
+        }
+        
+        // Wait for tab to load if needed
+        if (tabInfo.status !== 'complete') {
+          let attempts = 0;
+          while (attempts < 20) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const updatedTab = await chrome.tabs.get(tabId);
+            if (updatedTab.status === 'complete') {
+              break;
+            }
+            attempts++;
+          }
+        }
+        
+        // Final URL check
+        const finalTabInfo = await chrome.tabs.get(tabId);
+        if (!finalTabInfo.url || !isValidResumeUrl(finalTabInfo.url)) {
+          throw new Error(`Tab ${tabId} is no longer a valid resume page`);
+        }
+        
+        // Inject content script
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content/resumeBooster.js'],
+        });
+        
+        // Wait for initialization
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       
-      // Ждём немного для инициализации
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Проверяем, что script теперь отвечает
+      // Verify script responds
       try {
-        const verifyResponse = await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
-        console.log(`✅ Content script ПОДТВЕРЖДЁН для tab ${tabId}:`, verifyResponse);
+        await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
       } catch (verifyError) {
-        console.error(`❌ Content script НЕ ОТВЕЧАЕТ после инъекции для tab ${tabId}:`, verifyError);
-        throw new Error(`Content script не отвечает после инъекции: ${verifyError}`);
+        throw new Error(`Content script not responding after injection`);
       }
       
     } catch (injectionError) {
-      console.error(`❌ КРИТИЧЕСКАЯ ОШИБКА инъекции content script для tab ${tabId}:`, injectionError);
+      console.error(`❌ Content script injection failed for tab ${tabId}:`, injectionError);
       
-      // Попробуем альтернативный метод инъекции
-      try {
-        console.log(`🔄 Пробуем альтернативную инъекцию для tab ${tabId}...`);
-        await chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          func: () => {
-            console.log('🚀 Alternative content script injection test');
-            (window as any).alternativeInjectionTest = true;
+      // Handle permission errors
+      const errorMessage = (injectionError as Error).message;
+      if (errorMessage.includes('Cannot access contents of the page') || 
+          errorMessage.includes('Extension manifest must request permission')) {
+        
+        console.log(`🔒 Permission error for tab ${tabId}, attempting reload...`);
+        
+        try {
+          const tabInfo = await chrome.tabs.get(tabId);
+          
+          if (!tabInfo.url || !isValidResumeUrl(tabInfo.url)) {
+            await updateTabState(tabId, TabState.REMOVED);
+            await persistentAlarmManager.stopTimer(tabId);
+            return;
           }
-        });
-        console.log(`✅ Альтернативная инъекция успешна для tab ${tabId}`);
-      } catch (altError) {
-        console.error(`❌ Альтернативная инъекция ПРОВАЛИЛАСЬ для tab ${tabId}:`, altError);
-        throw new Error(`Все методы инъекции провалились: ${injectionError}`);
+          
+          // Reload tab to reset state
+          await chrome.tabs.reload(tabId);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Try injection again
+          await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['content/resumeBooster.js'],
+          });
+          
+        } catch (reloadError) {
+          throw new Error(`Permission error and reload failed: ${injectionError}`);
+        }
+      } else {
+        // Try alternative injection
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            func: () => {
+              (window as any).alternativeInjectionTest = true;
+            }
+          });
+        } catch (altError) {
+          throw new Error(`All injection methods failed: ${injectionError}`);
+        }
       }
     }
 
-    // Send message to content script to click button
+    // Send boost message
     const message: BackgroundMessage = {
       type: 'BOOST_RESUME',
     };
 
-    // ✅ ИСПРАВЛЕНИЕ: ВСЕГДА используем пользовательский интервал
     const settings = await getSettings();
-    const intervalMs = settings.clickInterval * 60 * 1000; // ФИКСИРОВАННЫЙ интервал
+    const intervalMs = settings.clickInterval * 60 * 1000;
     let nextState = TabState.ACTIVE;
 
     try {
@@ -1415,11 +1451,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
       )) as ContentMessage;
 
       if (response.success) {
-        // Record success in circuit breaker
         circuitBreaker.recordSuccess(tabId);
         errorRecoverySystem.resetRecoveryAttempts(tabId);
 
-        // Batch log entries for better performance
         batchOperationsManager.addToBatch('log_entries', async () => {
           await addLogEntry({
             level: 'info',
@@ -1428,12 +1462,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
           });
         });
 
-        console.log(
-          `✅ Button click successful for tab ${tabId}, restarting timer with user interval (${settings.clickInterval}min)`
-        );
+        console.log(`✅ Button click successful for tab ${tabId}`);
         nextState = TabState.ACTIVE;
       } else {
-        // Record failure in circuit breaker
         circuitBreaker.recordFailure(tabId);
         await addLogEntry({
           level: 'warning',
@@ -1441,27 +1472,20 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
           tabId: tabId,
         });
 
-        console.log(
-          `⚠️ Button click failed for tab ${tabId}, restarting timer with SAME user interval (${settings.clickInterval}min)`
-        );
-        nextState = TabState.ACTIVE; // ✅ ИСПРАВЛЕНИЕ: Остаёмся активными
+        console.log(`⚠️ Button click failed for tab ${tabId}`);
+        nextState = TabState.ACTIVE;
       }
     } catch (messageError) {
-      // Record failure in circuit breaker
       circuitBreaker.recordFailure(tabId);
-
       console.error(`Failed to send message to tab ${tabId}:`, messageError);
 
-      // Attempt error recovery
       const recoverySuccessful = await errorRecoverySystem.attemptRecovery(
         tabId,
         messageError as Error
       );
 
       if (recoverySuccessful) {
-        console.log(
-          `✅ Recovery successful for tab ${tabId}, continuing with user interval (${settings.clickInterval}min)`
-        );
+        console.log(`✅ Recovery successful for tab ${tabId}`);
         nextState = TabState.ACTIVE;
       } else {
         await addLogEntry({
@@ -1470,21 +1494,14 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
           tabId: tabId,
         });
 
-        console.log(
-          `❌ Communication failed for tab ${tabId}, restarting timer with SAME user interval (${settings.clickInterval}min)`
-        );
-        nextState = TabState.ACTIVE; // ✅ ИСПРАВЛЕНИЕ: Остаёмся активными
+        console.log(`❌ Communication failed for tab ${tabId}`);
+        nextState = TabState.ACTIVE;
       }
     }
 
-    // Always restart timer regardless of what happened above
+    // Always restart timer
     try {
-      console.log(
-        `🔄 Restarting timer for tab ${tabId} with interval ${intervalMs / 1000 / 60} minutes`
-      );
       await persistentAlarmManager.startTimer(tabId, intervalMs);
-
-      // Update tab state
       await updateTabState(tabId, nextState);
 
       await addLogEntry({
@@ -1494,9 +1511,7 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
       });
 
       const processingTime = Date.now() - startTime;
-      console.log(
-        `✅ [${new Date().toLocaleTimeString()}] Timer successfully restarted for tab ${tabId} - SERVICE WORKER PROCESSING COMPLETED in ${processingTime}ms`
-      );
+      console.log(`✅ Timer restarted for tab ${tabId} (${processingTime}ms)`);
     } catch (timerError) {
       console.error(`❌ Failed to restart timer for tab ${tabId}:`, timerError);
 
@@ -1506,31 +1521,20 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         tabId: tabId,
       });
 
-      // Set tab to error state if timer restart fails
       await updateTabState(tabId, TabState.ERROR);
 
-      // ✅ ИСПРАВЛЕНИЕ: Используем тот же пользовательский интервал для fallback
+      // Fallback timer
       try {
-        console.log(
-          `🔄 Attempting fallback timer restart for tab ${tabId} with user interval (${settings.clickInterval}min)`
-        );
-        await persistentAlarmManager.startTimer(tabId, intervalMs); // ✅ Тот же интервал
+        await persistentAlarmManager.startTimer(tabId, intervalMs);
         console.log(`✅ Fallback timer started for tab ${tabId}`);
       } catch (fallbackError) {
-        console.error(
-          `❌ Even fallback timer failed for tab ${tabId}:`,
-          fallbackError
-        );
-        // If even fallback fails, we'll rely on health check to recover
+        console.error(`❌ Fallback timer failed for tab ${tabId}:`, fallbackError);
       }
     }
   } catch (error) {
-    // Record critical failure in circuit breaker
     circuitBreaker.recordFailure(tabId);
-
     console.error(`Error handling timer expiration for tab ${tabId}:`, error);
 
-    // Attempt error recovery for critical errors
     const recoverySuccessful = await errorRecoverySystem.attemptRecovery(
       tabId,
       error as Error
@@ -1543,30 +1547,19 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         tabId: tabId,
       });
 
-      // ✅ ИСПРАВЛЕНИЕ: Emergency timer с пользовательским интервалом
+      // Emergency timer restart
       try {
-        console.log(
-          `🚨 Emergency timer restart for tab ${tabId} after critical error`
-        );
         const settings = await getSettings();
-        const emergencyInterval = settings.clickInterval * 60 * 1000; // ✅ Тот же интервал
+        const emergencyInterval = settings.clickInterval * 60 * 1000;
         await persistentAlarmManager.startTimer(tabId, emergencyInterval);
-        await updateTabState(tabId, TabState.ACTIVE); // ✅ Остаёмся активными
-        console.log(
-          `✅ Emergency timer started for tab ${tabId} with user interval (${settings.clickInterval}min)`
-        );
+        await updateTabState(tabId, TabState.ACTIVE);
+        console.log(`✅ Emergency timer started for tab ${tabId}`);
       } catch (emergencyError) {
-        console.error(
-          `❌ Emergency timer restart failed for tab ${tabId}:`,
-          emergencyError
-        );
-        // If even emergency restart fails, health check will eventually recover
+        console.error(`❌ Emergency timer failed for tab ${tabId}:`, emergencyError);
       }
     }
   } finally {
-    // ✅ CRITICAL: Always release the processing lock
     processingTabs.delete(tabId);
-    console.log(`🔓 Released Service Worker processing lock for tab ${tabId}`);
   }
 }
 
@@ -1605,7 +1598,10 @@ chrome.runtime.onMessage.addListener(
     sender: chrome.runtime.MessageSender,
     sendResponse: (response: any) => void
   ) => {
-    console.log('Service worker received message:', message, 'from:', sender);
+    // Only log important message types, not routine ones
+    if (!['GET_EXTENSION_STATE'].includes(message.type)) {
+      console.log('Service worker received message:', message.type, 'from:', sender.tab?.id || 'popup');
+    }
 
     // Handle different message types
     switch (message.type) {
@@ -1674,35 +1670,14 @@ async function handleGetExtensionState(
   sendResponse: (response: any) => void
 ): Promise<void> {
   try {
-    console.log('=== Service Worker: GET_EXTENSION_STATE ===');
-
     const settings = await getSettings();
     const managedTabs = getManagedTabsSync();
-
-    console.log(
-      'Raw managedTabs from tabManager:',
-      managedTabs.map(t => ({
-        tabId: t.tabId,
-        title: t.title,
-        state: t.state,
-      }))
-    );
 
     // Get timer status for each tab
     const tabsWithTimers = managedTabs.map(tab => {
       const timerStatus = persistentAlarmManager.getTimerStatus(tab.tabId);
       const circuitBreakerStatus = circuitBreaker.getStatus(tab.tabId);
       const recoveryStatus = errorRecoverySystem.getRecoveryStatus(tab.tabId);
-
-      console.log(
-        `Timer status for tab ${tab.tabId} (${tab.title}):`,
-        timerStatus
-      );
-      console.log(
-        `Circuit breaker status for tab ${tab.tabId}:`,
-        circuitBreakerStatus
-      );
-      console.log(`Recovery status for tab ${tab.tabId}:`, recoveryStatus);
 
       return {
         ...tab,
@@ -1724,15 +1699,6 @@ async function handleGetExtensionState(
       },
       testResults: testingFramework.getTestResults(),
     };
-
-    console.log('Sending state to popup:', {
-      isInitialized: state.isInitialized,
-      globalPaused: state.globalPaused,
-      managedTabsCount: state.managedTabs.length,
-      activeTimers: state.activeTimers,
-    });
-
-    console.log('=== End Service Worker: GET_EXTENSION_STATE ===');
 
     sendResponse({ success: true, data: state });
   } catch (error) {
@@ -1983,19 +1949,19 @@ async function handleRefreshTabs(
   sendResponse: (response: any) => void
 ): Promise<void> {
   try {
-    console.log('🔄 ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ТАБОВ ЗАПУЩЕНО');
+    console.log('🔄 Refreshing tabs...');
 
-    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем кеш перед обновлением
+    // Clear cache before refresh
     performanceOptimizer.setCache('managed_tabs_discovery', [], 0);
     
-    // Принудительно обновляем список табов
+    // Force update tab list
     await updateTabList();
     
-    // Заново обнаруживаем и управляем табами
+    // Rediscover and manage tabs
     await discoverAndManageTabs();
 
     const managedTabs = getManagedTabsSync();
-    console.log(`✅ ОБНОВЛЕНИЕ ЗАВЕРШЕНО: найдено ${managedTabs.length} табов`);
+    console.log(`✅ Refresh completed: found ${managedTabs.length} tabs`);
 
     sendResponse({ 
       success: true, 
