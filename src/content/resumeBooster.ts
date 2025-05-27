@@ -27,6 +27,7 @@ const BUTTON_SELECTORS = [
 
 // State management
 let isInitialized = false;
+let isInitializing = false; // Fix: Add flag to prevent race condition
 let mutationObserver: MutationObserver | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 let lastButtonState: boolean | null = null;
@@ -35,28 +36,34 @@ let lastButtonState: boolean | null = null;
  * Initialize the content script
  */
 function initialize(): void {
-  if (isInitialized) {
+  // Fix: Prevent race condition with proper locking
+  if (isInitialized || isInitializing) {
     return;
   }
 
+  isInitializing = true;
   console.log('HeadHunter Resume Auto-Boost: Content script initializing...');
 
-  // Set up message listener
-  setupMessageListener();
+  try {
+    // Set up message listener
+    setupMessageListener();
 
-  // Set up DOM observer
-  setupMutationObserver();
+    // Set up DOM observer
+    setupMutationObserver();
 
-  // Set up page refresh mechanism
-  setupPageRefresh().catch(error => {
-    console.error('Failed to setup page refresh:', error);
-  });
+    // Set up page refresh mechanism
+    setupPageRefresh().catch(error => {
+      console.error('Failed to setup page refresh:', error);
+    });
 
-  // Initial button check
-  checkButtonState();
+    // Initial button check
+    checkButtonState();
 
-  isInitialized = true;
-  console.log('HeadHunter Resume Auto-Boost: Content script initialized');
+    isInitialized = true;
+    console.log('HeadHunter Resume Auto-Boost: Content script initialized');
+  } finally {
+    isInitializing = false;
+  }
 }
 
 /**
@@ -72,10 +79,12 @@ function findBoostButton(): HTMLElement | null {
         const text = selector.match(/contains\("([^"]+)"\)/)?.[1];
         if (text) {
           const tagName = selector.split(':')[0] || '*';
-          const elements = document.querySelectorAll(tagName);
-          console.log(
-            `Checking ${elements.length} ${tagName} elements for text "${text}"`
-          );
+          // Fix: Handle empty string case when selector starts with ':'
+          const safeTagName = tagName.trim() === '' ? '*' : tagName;
+          const elements = document.querySelectorAll(safeTagName);
+                      console.log(
+              `Checking ${elements.length} ${safeTagName} elements for text "${text}"`
+            );
 
           for (let i = 0; i < elements.length; i++) {
             const element = elements[i] as HTMLElement;
@@ -238,7 +247,7 @@ function checkButtonState(): void {
   if (lastButtonState !== isActive) {
     lastButtonState = isActive;
 
-    sendMessageToBackground({
+    const messageSent = sendMessageToBackground({
       type: 'BUTTON_STATE',
       success: true,
       data: {
@@ -247,6 +256,11 @@ function checkButtonState(): void {
         buttonText: button?.textContent || null,
       },
     });
+
+    // Fix: Handle message sending failure
+    if (!messageSent) {
+      console.warn('Failed to notify background script of button state change');
+    }
   }
 }
 
@@ -548,11 +562,19 @@ function handleSettingsUpdate(settings: any): void {
 /**
  * Send message to background script
  */
-function sendMessageToBackground(message: ContentMessage): void {
+function sendMessageToBackground(message: ContentMessage): boolean {
   try {
     chrome.runtime.sendMessage(message);
+    return true; // Fix: Return success indicator
   } catch (error) {
     console.error('Failed to send message to background:', error);
+    
+    // Fix: Attempt to notify user of communication failure
+    if (message.type === 'BUTTON_STATE') {
+      console.warn('Button state update failed - extension may not be responding');
+    }
+    
+    return false; // Fix: Return failure indicator
   }
 }
 

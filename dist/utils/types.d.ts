@@ -48,23 +48,23 @@ export interface LogEntry {
     level: 'info' | 'warning' | 'error';
     message: string;
     tabId?: number;
-    data?: any;
+    data?: unknown;
 }
 export interface BackgroundMessage {
     type: 'BOOST_RESUME' | 'CHECK_BUTTON_STATE' | 'REFRESH_PAGE' | 'GET_STATE' | 'GLOBAL_PAUSE_TOGGLE' | 'SET_GLOBAL_PAUSE' | 'SETTINGS_UPDATE' | 'TAB_PAUSE_TOGGLE' | 'TAB_REMOVE' | 'GET_EXTENSION_STATE' | 'SET_TAB_PAUSE' | 'SET_INTERVAL' | 'REFRESH_TABS';
     tabId?: number;
-    data?: any;
+    data?: unknown;
     paused?: boolean;
     interval?: number;
 }
 export interface ContentMessage {
     type: 'BUTTON_CLICKED' | 'BUTTON_STATE' | 'PAGE_REFRESHED' | 'ERROR';
     success: boolean;
-    data?: any;
+    data?: unknown;
 }
 export interface PopupMessage {
     type: 'GET_STATE' | 'SET_INTERVAL' | 'PAUSE_TAB' | 'RESUME_TAB' | 'GLOBAL_PAUSE' | 'CLEAR_LOGS';
-    data?: any;
+    data?: unknown;
 }
 export declare const DEFAULT_SETTINGS: AppSettings;
 export declare function toExtensionSettings(settings: AppSettings): ExtensionSettings;

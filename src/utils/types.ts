@@ -66,7 +66,7 @@ export interface LogEntry {
   level: 'info' | 'warning' | 'error';
   message: string;
   tabId?: number;
-  data?: any;
+  data?: unknown;
 }
 
 // Message Types
@@ -86,7 +86,7 @@ export interface BackgroundMessage {
     | 'SET_INTERVAL'
     | 'REFRESH_TABS';
   tabId?: number;
-  data?: any;
+  data?: unknown;
   paused?: boolean;
   interval?: number;
 }
@@ -94,7 +94,7 @@ export interface BackgroundMessage {
 export interface ContentMessage {
   type: 'BUTTON_CLICKED' | 'BUTTON_STATE' | 'PAGE_REFRESHED' | 'ERROR';
   success: boolean;
-  data?: any;
+  data?: unknown;
 }
 
 export interface PopupMessage {
@@ -105,7 +105,7 @@ export interface PopupMessage {
     | 'RESUME_TAB'
     | 'GLOBAL_PAUSE'
     | 'CLEAR_LOGS';
-  data?: any;
+  data?: unknown;
 }
 
 // Default Settings

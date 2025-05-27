@@ -42,7 +42,12 @@ import {
   updateTabState,
 } from '../utils/tabManager';
 import { persistentAlarmManager } from '../utils/persistentAlarmManager';
-import { TabState, BackgroundMessage, ContentMessage } from '../utils/types';
+import {
+  TabState,
+  TabInfo,
+  BackgroundMessage,
+  ContentMessage,
+} from '../utils/types';
 
 console.log('HeadHunter Resume Auto-Boost Extension: Service Worker loaded');
 
@@ -329,14 +334,16 @@ const errorRecoverySystem = new ErrorRecoverySystem();
 class PerformanceOptimizer {
   private debounceTimers: Map<string, ReturnType<typeof setTimeout>> =
     new Map();
-  private cache: Map<string, { data: any; timestamp: number; ttl: number }> =
-    new Map();
+  private cache: Map<
+    string,
+    { data: unknown; timestamp: number; ttl: number }
+  > = new Map();
   private readonly defaultCacheTtl = 5 * 60 * 1000; // 5 minutes
 
   /**
    * Debounce function calls
    */
-  debounce<T extends (...args: any[]) => any>(
+  debounce<T extends (...args: unknown[]) => unknown>(
     key: string,
     func: T,
     delay: number
@@ -359,7 +366,11 @@ class PerformanceOptimizer {
   /**
    * Cache data with TTL
    */
-  setCache(key: string, data: any, ttl: number = this.defaultCacheTtl): void {
+  setCache(
+    key: string,
+    data: unknown,
+    ttl: number = this.defaultCacheTtl
+  ): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -370,7 +381,7 @@ class PerformanceOptimizer {
   /**
    * Get cached data if not expired
    */
-  getCache(key: string): any | null {
+  getCache(key: string): unknown | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
 
@@ -812,7 +823,10 @@ class TestingFramework {
       performanceOptimizer.setCache(testKey, testData, 1000); // 1 second TTL
       const cachedData = performanceOptimizer.getCache(testKey);
 
-      if (!cachedData || cachedData.test !== testData.test) {
+      if (
+        !cachedData ||
+        (cachedData as { test: string }).test !== testData.test
+      ) {
         console.error('Cache set/get failed');
         return false;
       }
@@ -949,90 +963,107 @@ function addLogEntryOptimized(logEntry: {
  *
  * @throws Never throws - all errors are caught and logged
  */
+
+// 🔧 FIX: Race condition prevention
+let initializationPromise: Promise<void> | null = null;
+
 async function initializeExtension(): Promise<void> {
+  // FIX: Return existing promise if initialization is in progress
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
   if (isInitialized) {
     return;
   }
 
-  try {
-    console.log('Initializing HeadHunter Resume Auto-Boost Extension...');
+  // FIX: Store the promise to prevent concurrent initializations
+  initializationPromise = (async () => {
+    try {
+      console.log('Initializing HeadHunter Resume Auto-Boost Extension...');
 
-    // Initialize storage
-    await initializeStorage();
+      // Initialize storage
+      await initializeStorage();
 
-    // Initialize tab manager
-    await initializeTabManager();
+      // Initialize tab manager
+      await initializeTabManager();
 
-    // Load settings
-    const settings = await getSettings();
-    globalPaused = settings.globalPaused;
+      // Load settings
+      const settings = await getSettings();
+      globalPaused = settings.globalPaused;
 
-    console.log(`🔧 Settings loaded:`, {
-      clickInterval: settings.clickInterval,
-      globalPaused: settings.globalPaused,
-      maxTabs: settings.maxTabs,
-      loggingEnabled: settings.loggingEnabled,
-    });
-    console.log(`🔧 Global pause state set to: ${globalPaused}`);
+      console.log(`🔧 Settings loaded:`, {
+        clickInterval: settings.clickInterval,
+        globalPaused: settings.globalPaused,
+        maxTabs: settings.maxTabs,
+        loggingEnabled: settings.loggingEnabled,
+      });
+      console.log(`🔧 Global pause state set to: ${globalPaused}`);
 
-    // Set up timer callbacks
-    persistentAlarmManager.setGlobalCallback(handleTimerExpiration);
+      // Set up timer callbacks
+      persistentAlarmManager.setGlobalCallback(handleTimerExpiration);
 
-    // Set up periodic cache cleanup
-    setInterval(
-      () => {
-        debouncedCleanupCache();
-      },
-      10 * 60 * 1000
-    ); // Every 10 minutes
+      // Set up periodic cache cleanup
+      setInterval(
+        () => {
+          debouncedCleanupCache();
+        },
+        10 * 60 * 1000
+      ); // Every 10 minutes
 
-    // Discover and start managing tabs
-    await discoverAndManageTabs();
+      // Discover and start managing tabs
+      await discoverAndManageTabs();
 
-    // Run initial system tests in development mode
-    if (
-      chrome.runtime.getManifest().version.includes('dev') ||
-      chrome.runtime.getManifest().version === '1.0.0'
-    ) {
-      console.log('🧪 Running initial system tests...');
-      testingFramework.enableTestingMode();
+      // Run initial system tests in development mode
+      if (
+        chrome.runtime.getManifest().version.includes('dev') ||
+        chrome.runtime.getManifest().version === '1.0.0'
+      ) {
+        console.log('🧪 Running initial system tests...');
+        testingFramework.enableTestingMode();
 
-      // Run tests after a short delay to allow initialization to complete
-      setTimeout(async () => {
-        try {
-          const results = await testingFramework.runSystemTests();
-          console.log(
-            `🧪 Initial system tests completed: ${results.passed} passed, ${results.failed} failed`
-          );
-
-          if (results.failed > 0) {
-            console.warn(
-              '⚠️ Some system tests failed. Check console for details.'
+        // Run tests after a short delay to allow initialization to complete
+        setTimeout(async () => {
+          try {
+            const results = await testingFramework.runSystemTests();
+            console.log(
+              `🧪 Initial system tests completed: ${results.passed} passed, ${results.failed} failed`
             );
+
+            if (results.failed > 0) {
+              console.warn(
+                '⚠️ Some system tests failed. Check console for details.'
+              );
+            }
+          } catch (error) {
+            console.error('Failed to run initial system tests:', error);
           }
-        } catch (error) {
-          console.error('Failed to run initial system tests:', error);
-        }
-      }, 5000); // 5 seconds delay
+        }, 5000); // 5 seconds delay
+      }
+
+      isInitialized = true;
+
+      await addLogEntry({
+        level: 'info',
+        message: 'Extension initialized successfully',
+      });
+
+      console.log(
+        'HeadHunter Resume Auto-Boost Extension initialized successfully'
+      );
+    } catch (error) {
+      console.error('Failed to initialize extension:', error);
+      await addLogEntry({
+        level: 'error',
+        message: `Failed to initialize extension: ${error}`,
+      });
+    } finally {
+      // FIX: Always reset the promise to allow future initializations
+      initializationPromise = null;
     }
+  })();
 
-    isInitialized = true;
-
-    await addLogEntry({
-      level: 'info',
-      message: 'Extension initialized successfully',
-    });
-
-    console.log(
-      'HeadHunter Resume Auto-Boost Extension initialized successfully'
-    );
-  } catch (error) {
-    console.error('Failed to initialize extension:', error);
-    await addLogEntry({
-      level: 'error',
-      message: `Failed to initialize extension: ${error}`,
-    });
-  }
+  return initializationPromise;
 }
 
 /**
@@ -1071,7 +1102,7 @@ async function discoverAndManageTabs(): Promise<void> {
     const cacheKey = 'managed_tabs_discovery';
     const cachedTabs = performanceOptimizer.getCache(cacheKey);
 
-    if (cachedTabs && cachedTabs.length > 0) {
+    if (cachedTabs && Array.isArray(cachedTabs) && cachedTabs.length > 0) {
       console.log(`📋 Using cached tab discovery (${cachedTabs.length} tabs)`);
     } else {
       await updateTabList();
@@ -1081,8 +1112,10 @@ async function discoverAndManageTabs(): Promise<void> {
       performanceOptimizer.setCache(cacheKey, managedTabs, 2 * 60 * 1000);
     }
 
-    const managedTabs =
-      performanceOptimizer.getCache(cacheKey) || getManagedTabsSync();
+    const cachedResult = performanceOptimizer.getCache(cacheKey);
+    const managedTabs = (
+      Array.isArray(cachedResult) ? cachedResult : getManagedTabsSync()
+    ) as TabInfo[];
 
     console.log(`Found ${managedTabs.length} resume tabs to manage`);
 

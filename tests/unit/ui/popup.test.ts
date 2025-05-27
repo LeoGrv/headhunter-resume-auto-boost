@@ -60,7 +60,7 @@ describe('Popup UI Snapshot Tests', () => {
     );
 
     // Read the actual popup HTML
-    const popupHtmlPath = path.join(__dirname, '../../src/popup/popup.html');
+    const popupHtmlPath = path.join(__dirname, '../../../src/popup/popup.html');
     const popupHtml = fs.readFileSync(popupHtmlPath, 'utf8');
 
     // Create JSDOM instance

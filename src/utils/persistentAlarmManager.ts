@@ -138,7 +138,7 @@ export class PersistentAlarmManager {
       for (const alarm of ourAlarms) {
         const match = alarm.name.match(/^tab_(\d+)_timer$/);
         if (match) {
-          const tabId = parseInt(match[1]!, 10);
+          const tabId = parseInt(match[1] || '0', 10);
           if (!this.timers.has(tabId)) {
             console.log(`🧹 Cleaning up orphaned alarm: ${alarm.name}`);
             await chrome.alarms.clear(alarm.name);
@@ -704,7 +704,7 @@ export class PersistentAlarmManager {
         return;
       }
 
-      const tabId = parseInt(match[1]!, 10);
+      const tabId = parseInt(match[1] || '0', 10);
 
       // ✅ CRITICAL: Process each timer independently and asynchronously
       // Don't await here to prevent blocking other timers

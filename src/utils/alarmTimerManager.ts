@@ -288,7 +288,7 @@ export class AlarmTimerManager {
         return;
       }
 
-      const tabId = parseInt(match[1]!, 10);
+      const tabId = parseInt(match[1] || '0', 10);
       await this.handleTimerExpiration(tabId);
     } catch (error) {
       console.error(

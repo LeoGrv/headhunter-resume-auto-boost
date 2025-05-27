@@ -1,10 +1,17 @@
-name: CI/CD Pipeline
+name: Enhanced CI/CD Pipeline with Bug Detection
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  schedule:
+    # Nightly builds at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '20.x'
+  COVERAGE_THRESHOLD: 80
 
 jobs:
   test:

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">2.68% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/372</span>
+                <span class='fraction'>10/372</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">2.77% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/360</span>
+                <span class='fraction'>10/360</span>
             </div>
         
             
@@ -1052,7 +1052,7 @@
 <a name='L987'></a><a href='#L987'>987</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1061,7 +1061,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1069,9 +1069,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1084,8 +1084,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2021,14 +2021,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2038,7 +2038,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// HeadHunter Resume Auto-Boost Extension
 // Popup Interface Logic
 &nbsp;
-<span class="cstat-no" title="statement not covered" >import {</span>
+import {
   getSettings,
   saveSettings,
   getManagedTabs,
@@ -2047,7 +2047,7 @@
   saveGlobalPauseState,
   getGlobalPauseState,
 } from '../utils/storage';
-<span class="cstat-no" title="statement not covered" >import {</span>
+import {
   TabInfo,
   TabState,
   AppSettings,
@@ -2055,9 +2055,9 @@
   BackgroundMessage,
 } from '../utils/types';
 &nbsp;
-<span class="cstat-no" title="statement not covered" >console.log('🚀 HeadHunter Resume Auto-Boost Extension: Popup script loaded');</span>
-<span class="cstat-no" title="statement not covered" >console.log('🚀 Current URL:', window.location.href);</span>
-<span class="cstat-no" title="statement not covered" >console.log('🚀 Document ready state:', document.readyState);</span>
+console.log('🚀 HeadHunter Resume Auto-Boost Extension: Popup script loaded');
+console.log('🚀 Current URL:', window.location.href);
+console.log('🚀 Document ready state:', document.readyState);
 &nbsp;
 // DOM Elements
 let statusDot: HTMLElement;
@@ -2070,8 +2070,8 @@ let clearLogsBtn: HTMLButtonElement;
 &nbsp;
 // State
 let currentSettings: AppSettings;
-let managedTabs: TabInfo[] = <span class="cstat-no" title="statement not covered" >[];</span>
-let isGlobalPaused = <span class="cstat-no" title="statement not covered" >false;</span>
+let managedTabs: TabInfo[] = [];
+let isGlobalPaused = false;
 &nbsp;
 /**
  * Send message to Service Worker with retry mechanism
@@ -3007,14 +3007,14 @@ function <span class="fstat-no" title="function not covered" >truncateText(</spa
 }
 &nbsp;
 // Initialize when DOM is loaded
-<span class="cstat-no" title="statement not covered" >console.log('🚀 POPUP - Adding DOMContentLoaded listener...');</span>
-<span class="cstat-no" title="statement not covered" >document.addEventListener('DOMContentLoaded', <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
+console.log('🚀 POPUP - Adding DOMContentLoaded listener...');
+document.addEventListener('DOMContentLoaded', <span class="fstat-no" title="function not covered" >() =</span>&gt; {
 <span class="cstat-no" title="statement not covered" >  console.log('🚀 POPUP - DOMContentLoaded fired, calling initializePopup...');</span>
 <span class="cstat-no" title="statement not covered" >  initializePopup();</span>
 });
 &nbsp;
 // Refresh data periodically
-<span class="cstat-no" title="statement not covered" >setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
+setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; {
 <span class="cstat-no" title="statement not covered" >  loadManagedTabs().then(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    renderManagedTabs();</span>
 <span class="cstat-no" title="statement not covered" >    updateStatusIndicator();</span>
@@ -3028,7 +3028,7 @@ function <span class="fstat-no" title="function not covered" >truncateText(</spa
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-27T09:01:48.161Z
+                at 2025-05-27T16:57:50.839Z
             </div>
         <script src="../prettify.js"></script>
         <script>
