@@ -91,49 +91,66 @@ function initialize(): void {
  * Find the boost button using multiple selectors
  */
 function findBoostButton(): HTMLElement | null {
-  console.log('Searching for boost button...');
+  console.log('🔍 Searching for boost button...');
 
+  // Priority search: Look for exact text matches first
+  const exactTextMatches = [
+    'Поднять в поиске',
+    'Поднять резюме', 
+    'Поднять',
+    'Обновить резюме',
+    'Обновить'
+  ];
+
+  console.log('🎯 Step 1: Looking for exact text matches...');
+  for (const exactText of exactTextMatches) {
+    const allElements = document.querySelectorAll('button, a, [role="button"]');
+    for (let i = 0; i < allElements.length; i++) {
+      const element = allElements[i] as HTMLElement;
+      const elementText = element.textContent?.trim() || '';
+      
+      if (elementText === exactText) {
+        console.log(`✅ Found exact match for "${exactText}":`, element);
+        return element;
+      }
+    }
+  }
+
+  console.log('🎯 Step 2: Looking for partial text matches...');
+  for (const partialText of exactTextMatches) {
+    const allElements = document.querySelectorAll('button, a, [role="button"]');
+    for (let i = 0; i < allElements.length; i++) {
+      const element = allElements[i] as HTMLElement;
+      const elementText = element.textContent?.trim() || '';
+      
+      if (elementText.includes(partialText)) {
+        console.log(`✅ Found partial match for "${partialText}":`, element);
+        return element;
+      }
+    }
+  }
+
+  console.log('🎯 Step 3: Trying data-qa selectors...');
   for (const selector of BUTTON_SELECTORS) {
     try {
-      // Handle :contains() pseudo-selector manually
-      if (selector.includes(':contains(')) {
-        const text = selector.match(/contains\("([^"]+)"\)/)?.[1];
-        if (text) {
-          const tagName = selector.split(':')[0] || '*';
-          // Fix: Handle empty string case when selector starts with ':'
-          const safeTagName = tagName.trim() === '' ? '*' : tagName;
-          const elements = document.querySelectorAll(safeTagName);
-                      console.log(
-              `Checking ${elements.length} ${safeTagName} elements for text "${text}"`
-            );
-
-          for (let i = 0; i < elements.length; i++) {
-            const element = elements[i] as HTMLElement;
-            if (element && element.textContent?.includes(text)) {
-              console.log(`Found button with text "${text}":`, element);
-              return element;
-            }
-          }
-        }
-      } else {
+      if (!selector.includes(':contains(')) {
         const element = document.querySelector(selector) as HTMLElement;
         if (element) {
-          console.log(`Found button with selector "${selector}":`, element);
+          console.log(`✅ Found button with selector "${selector}":`, element);
           return element;
         }
       }
     } catch (error) {
-      console.warn(`Failed to query selector ${selector}:`, error);
+      console.warn(`❌ Failed to query selector ${selector}:`, error);
     }
   }
 
-  // Aggressive search: look for any button/link with boost-related text
-  console.log('Performing aggressive search for boost button...');
+  console.log('🎯 Step 4: Aggressive keyword search...');
   const allClickableElements = document.querySelectorAll(
     'button, a, [role="button"], [class*="button"], [class*="btn"], span[onclick], div[onclick]'
   );
   
-  console.log(`Searching through ${allClickableElements.length} clickable elements...`);
+  console.log(`🔍 Searching through ${allClickableElements.length} clickable elements...`);
   
   const boostKeywords = [
     'поднять', 'boost', 'raise', 'update', 'обновить', 'продвинуть', 'refresh'
@@ -148,7 +165,7 @@ function findBoostButton(): HTMLElement | null {
     // Check if element contains boost-related keywords
     for (const keyword of boostKeywords) {
       if (text.includes(keyword) || dataQa.includes(keyword) || className.includes(keyword)) {
-        console.log(`Found potential boost button via keyword "${keyword}":`, {
+        console.log(`✅ Found potential boost button via keyword "${keyword}":`, {
           element,
           text: element.textContent?.trim(),
           dataQa: element.getAttribute('data-qa'),
@@ -160,12 +177,12 @@ function findBoostButton(): HTMLElement | null {
   }
 
   // Debug: log all buttons on the page
-  console.log(`No boost button found. Total clickable elements on page: ${allClickableElements.length}`);
+  console.log(`❌ No boost button found. Total clickable elements on page: ${allClickableElements.length}`);
 
   if (allClickableElements.length > 0) {
-    console.log('Available clickable elements (first 15):');
+    console.log('📋 Available clickable elements (first 20):');
     allClickableElements.forEach((btn, index) => {
-      if (index < 15) {
+      if (index < 20) {
         console.log(
           `  ${index + 1}. Text: "${btn.textContent?.trim()}", Classes: "${btn.className}", Data-qa: "${btn.getAttribute('data-qa')}", Tag: "${btn.tagName}"`
         );
@@ -230,43 +247,123 @@ async function clickBoostButton(): Promise<boolean> {
     const button = findBoostButton();
 
     if (!button) {
-      console.warn('Boost button not found');
+      console.warn('❌ Boost button not found');
       return false;
     }
 
     if (!isButtonActive()) {
-      console.warn('Boost button is not active/clickable');
+      console.warn('❌ Boost button is not active/clickable');
       return false;
     }
+
+    console.log('🎯 Found boost button, attempting to click:', {
+      text: button.textContent?.trim(),
+      dataQa: button.getAttribute('data-qa'),
+      className: button.className,
+      tagName: button.tagName
+    });
 
     // Scroll button into view
     button.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // Wait a bit for scroll to complete
+    // Wait for scroll to complete
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Create and dispatch click event
-    const clickEvent = new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-    });
+    // Try multiple click methods for better compatibility
+    let clickSuccess = false;
 
-    button.dispatchEvent(clickEvent);
-
-    // Also try direct click as fallback
-    if (typeof button.click === 'function') {
+    // Method 1: Focus and direct click
+    try {
+      button.focus();
+      await new Promise(resolve => setTimeout(resolve, 100));
       button.click();
+      console.log('✅ Method 1: Direct click executed');
+      clickSuccess = true;
+    } catch (error) {
+      console.warn('❌ Method 1 failed:', error);
     }
 
-    console.log('Boost button clicked successfully');
+    // Method 2: Mouse events sequence
+    try {
+      const mouseEvents = ['mousedown', 'mouseup', 'click'];
+      for (const eventType of mouseEvents) {
+        const event = new MouseEvent(eventType, {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          button: 0,
+          buttons: 1,
+          clientX: button.getBoundingClientRect().left + button.offsetWidth / 2,
+          clientY: button.getBoundingClientRect().top + button.offsetHeight / 2
+        });
+        button.dispatchEvent(event);
+      }
+      console.log('✅ Method 2: Mouse event sequence executed');
+      clickSuccess = true;
+    } catch (error) {
+      console.warn('❌ Method 2 failed:', error);
+    }
 
-    // Wait a bit to see if the action was successful
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Method 3: Keyboard activation (Enter key)
+    try {
+      button.focus();
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+        cancelable: true
+      });
+      button.dispatchEvent(enterEvent);
+      console.log('✅ Method 3: Enter key event executed');
+      clickSuccess = true;
+    } catch (error) {
+      console.warn('❌ Method 3 failed:', error);
+    }
 
-    return true;
+    // Method 4: Try to trigger form submission if button is in a form
+    try {
+      const form = button.closest('form');
+      if (form) {
+        form.submit();
+        console.log('✅ Method 4: Form submission executed');
+        clickSuccess = true;
+      }
+    } catch (error) {
+      console.warn('❌ Method 4 failed:', error);
+    }
+
+    if (clickSuccess) {
+      console.log('🎉 Boost button click attempts completed');
+      
+      // Wait to see if the page responds
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if button state changed (might be disabled after click)
+      const buttonAfterClick = findBoostButton();
+      if (buttonAfterClick) {
+        const isStillActive = isButtonActive();
+        console.log('📊 Button state after click:', {
+          found: !!buttonAfterClick,
+          active: isStillActive,
+          text: buttonAfterClick.textContent?.trim()
+        });
+        
+        // If button is now disabled/inactive, it likely worked
+        if (!isStillActive) {
+          console.log('✅ Button appears to be disabled after click - likely successful');
+          return true;
+        }
+      }
+      
+      return true;
+    } else {
+      console.error('❌ All click methods failed');
+      return false;
+    }
   } catch (error) {
-    console.error('Failed to click boost button:', error);
+    console.error('❌ Failed to click boost button:', error);
     return false;
   }
 }
