@@ -1184,7 +1184,7 @@ async function discoverAndManageTabs(): Promise<void> {
 
             // Update state to active and start timer
             await updateTabState(tab.tabId, TabState.ACTIVE);
-            await persistentAlarmManager.startTimer(tab.tabId, intervalMs);
+            persistentAlarmManager.startTimer(tab.tabId, intervalMs);
 
             await addLogEntry({
               level: 'info',
@@ -1583,6 +1583,8 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
  * - REFRESH_TABS: Rediscovers tabs and updates management
  * - TAB_REMOVE: Manually removes tab from management
  * - Testing commands: RUN_SYSTEM_TESTS, ENABLE/DISABLE_TESTING_MODE, GET_TEST_RESULTS
+ * - FORCE_START_TIMER: Manually starts timer for a specific tab
+ * - GET_LOGS: Retrieves logs from the extension
  *
  * **Response Pattern:**
  * All handlers use async functions and return { success: boolean, data?: any, error?: string }
@@ -1653,6 +1655,14 @@ chrome.runtime.onMessage.addListener(
 
       case 'GET_TEST_RESULTS':
         handleGetTestResults(sendResponse);
+        return true;
+
+      case 'FORCE_START_TIMER':
+        handleForceStartTimer(message.tabId, sendResponse);
+        return true;
+
+      case 'GET_LOGS':
+        handleGetLogs(sendResponse);
         return true;
 
       default:
@@ -2149,6 +2159,74 @@ async function handleGetTestResults(
     });
   } catch (error) {
     console.error('Failed to get test results:', error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
+/**
+ * Handle force start timer request
+ */
+async function handleForceStartTimer(
+  tabId: number,
+  sendResponse: (response: any) => void
+): Promise<void> {
+  try {
+    const managedTabs = getManagedTabsSync();
+    const tab = managedTabs.find(t => t.tabId === tabId);
+
+    if (!tab) {
+      sendResponse({ success: false, error: 'Tab not found' });
+      return;
+    }
+
+    if (tab.state === TabState.ACTIVE) {
+      sendResponse({ success: true, message: 'Tab is already active' });
+      return;
+    }
+
+    await updateTabState(tabId, TabState.ACTIVE);
+    
+    // Get settings to determine interval
+    const settings = await getSettings();
+    const intervalMs = settings.refreshInterval * 60 * 1000; // Convert minutes to milliseconds
+    persistentAlarmManager.startTimer(tabId, intervalMs);
+
+    await addLogEntry({
+      level: 'info',
+      message: `Timer manually started for tab: ${tab.title}`,
+      tabId: tabId,
+    });
+
+    sendResponse({ success: true, message: `Timer started for tab ${tabId}` });
+  } catch (error) {
+    console.error('Failed to force start timer:', error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
+/**
+ * Handle get logs request
+ */
+async function handleGetLogs(
+  sendResponse: (response: any) => void
+): Promise<void> {
+  try {
+    // Get recent log entries from storage
+    const result = await chrome.storage.local.get(['log_entries']);
+    const logs = result.log_entries || [];
+    
+    sendResponse({
+      success: true,
+      data: logs.slice(-50), // Return last 50 entries
+    });
+  } catch (error) {
+    console.error('Failed to get logs:', error);
     sendResponse({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
