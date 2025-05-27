@@ -1,102 +1,82 @@
-// Debug script to inject into HH page console
-console.log('=== BUTTON DEBUG SCRIPT ===');
+// Скрипт для диагностики кнопки обновления резюме
+// Выполните этот код в консоли DevTools на странице резюме HH.kz
 
-// Find all buttons on the page
-const allButtons = document.querySelectorAll('button, a, [role="button"], [class*="button"], [class*="btn"]');
-console.log(`Found ${allButtons.length} clickable elements`);
+console.log('=== ДИАГНОСТИКА КНОПКИ ОБНОВЛЕНИЯ РЕЗЮМЕ ===');
 
-// Look for boost button specifically
-const boostKeywords = ['поднять', 'boost', 'raise', 'update', 'обновить', 'продвинуть'];
-let foundButtons = [];
+// 1. Проверяем, загружен ли content script
+console.log('1. Content script загружен:', !!window.resumeBoosterLoaded);
 
-allButtons.forEach((btn, index) => {
-  const text = btn.textContent?.toLowerCase().trim() || '';
-  const dataQa = btn.getAttribute('data-qa')?.toLowerCase() || '';
-  const className = btn.className?.toLowerCase() || '';
-  
-  for (const keyword of boostKeywords) {
-    if (text.includes(keyword) || dataQa.includes(keyword) || className.includes(keyword)) {
-      foundButtons.push({
-        index,
-        element: btn,
-        text: btn.textContent?.trim(),
-        dataQa: btn.getAttribute('data-qa'),
-        className: btn.className,
-        disabled: btn.disabled || btn.getAttribute('aria-disabled') === 'true',
-        visible: btn.offsetParent !== null,
-        clickable: !btn.disabled && btn.offsetParent !== null
-      });
-      break;
+// 2. Ищем кнопку по data-qa атрибуту
+const buttonByDataQa = document.querySelector('button[data-qa="resume-update-button"]');
+console.log('2. Кнопка по data-qa:', buttonByDataQa);
+
+// 3. Ищем все кнопки на странице
+const allButtons = Array.from(document.querySelectorAll('button')).map(btn => ({
+  text: btn.textContent?.trim(),
+  dataQa: btn.getAttribute('data-qa'),
+  className: btn.className,
+  disabled: btn.disabled,
+  element: btn
+}));
+console.log('3. Все кнопки на странице:', allButtons);
+
+// 4. Ищем кнопки с текстом "Поднять" или "Обновить"
+const boostButtons = Array.from(document.querySelectorAll('button, a')).filter(btn => 
+  btn.textContent?.includes('Поднять') || 
+  btn.textContent?.includes('Обновить') ||
+  btn.textContent?.includes('поднять') ||
+  btn.textContent?.includes('обновить')
+);
+console.log('4. Кнопки с текстом поднять/обновить:', boostButtons);
+
+// 5. Ищем по классам
+const buttonsByClass = Array.from(document.querySelectorAll('[class*="resume"], [class*="boost"], [class*="update"]')).filter(el => 
+  el.tagName === 'BUTTON' || el.tagName === 'A'
+);
+console.log('5. Кнопки по классам:', buttonsByClass);
+
+// 6. Проверяем все элементы с onclick
+const clickableElements = Array.from(document.querySelectorAll('[onclick], [role="button"]'));
+console.log('6. Кликабельные элементы:', clickableElements);
+
+// 7. Пытаемся найти кнопку функцией из content script (если загружен)
+if (window.resumeBoosterLoaded) {
+  try {
+    // Эмулируем поиск кнопки как в content script
+    const exactTextMatches = [
+      'Поднять в поиске',
+      'Поднять резюме', 
+      'Поднять',
+      'Обновить резюме',
+      'Обновить'
+    ];
+
+    let foundButton = null;
+    for (const exactText of exactTextMatches) {
+      const allElements = document.querySelectorAll('button, a, [role="button"]');
+      for (let i = 0; i < allElements.length; i++) {
+        const element = allElements[i];
+        const elementText = element.textContent?.trim() || '';
+        
+        if (elementText === exactText || elementText.includes(exactText)) {
+          foundButton = element;
+          console.log(`7. Найдена кнопка по тексту "${exactText}":`, element);
+          break;
+        }
+      }
+      if (foundButton) break;
     }
-  }
-});
-
-console.log('=== BOOST BUTTONS FOUND ===');
-foundButtons.forEach((btn, i) => {
-  console.log(`${i + 1}. "${btn.text}"`);
-  console.log(`   Data-QA: ${btn.dataQa}`);
-  console.log(`   Classes: ${btn.className}`);
-  console.log(`   Disabled: ${btn.disabled}`);
-  console.log(`   Visible: ${btn.visible}`);
-  console.log(`   Clickable: ${btn.clickable}`);
-  console.log(`   Element:`, btn.element);
-  console.log('---');
-});
-
-// Try to click the first found button
-if (foundButtons.length > 0) {
-  const targetButton = foundButtons[0];
-  console.log(`Attempting to click: "${targetButton.text}"`);
-  
-  if (targetButton.clickable) {
-    // Scroll into view
-    targetButton.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
-    setTimeout(() => {
-      // Try multiple click methods
-      console.log('Trying click methods...');
-      
-      // Method 1: Direct click
-      try {
-        targetButton.element.click();
-        console.log('✅ Direct click executed');
-      } catch (e) {
-        console.log('❌ Direct click failed:', e);
-      }
-      
-      // Method 2: Mouse event
-      try {
-        const clickEvent = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-        });
-        targetButton.element.dispatchEvent(clickEvent);
-        console.log('✅ Mouse event dispatched');
-      } catch (e) {
-        console.log('❌ Mouse event failed:', e);
-      }
-      
-      // Method 3: Focus and Enter
-      try {
-        targetButton.element.focus();
-        const enterEvent = new KeyboardEvent('keydown', {
-          key: 'Enter',
-          code: 'Enter',
-          bubbles: true
-        });
-        targetButton.element.dispatchEvent(enterEvent);
-        console.log('✅ Enter key event dispatched');
-      } catch (e) {
-        console.log('❌ Enter key failed:', e);
-      }
-      
-    }, 1000);
-  } else {
-    console.log('❌ Button is not clickable');
+    if (!foundButton) {
+      console.log('7. Кнопка не найдена по точному тексту');
+    }
+  } catch (error) {
+    console.error('7. Ошибка при поиске кнопки:', error);
   }
-} else {
-  console.log('❌ No boost buttons found');
 }
 
-console.log('=== END DEBUG ==='); 
+// 8. Проверяем URL страницы
+console.log('8. URL страницы:', window.location.href);
+console.log('9. Заголовок страницы:', document.title);
+
+console.log('=== КОНЕЦ ДИАГНОСТИКИ ==='); 

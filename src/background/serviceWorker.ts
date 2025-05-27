@@ -76,6 +76,59 @@ function isValidResumeUrl(url: string): boolean {
 }
 
 /**
+ * Ensure content script is injected into the tab
+ */
+async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
+  try {
+    // First, check if content script is already loaded
+    try {
+      const testResponse = await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
+      if (testResponse) {
+        console.log(`✅ Content script already loaded in tab ${tabId}`);
+        return true;
+      }
+    } catch (error) {
+      // Content script not loaded, proceed with injection
+    }
+
+    // Check if tab still exists and is valid
+    const tabInfo = await chrome.tabs.get(tabId);
+    if (!tabInfo || !tabInfo.url || !isValidResumeUrl(tabInfo.url)) {
+      console.warn(`❌ Tab ${tabId} is not a valid resume tab for injection`);
+      return false;
+    }
+
+    console.log(`🔄 Injecting content script into tab ${tabId}`);
+    
+    // Inject content script
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['content/resumeBooster.js'],
+    });
+
+    // Wait a bit for script to initialize
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Test if injection was successful
+    try {
+      const testResponse = await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
+      if (testResponse) {
+        console.log(`✅ Content script successfully injected into tab ${tabId}`);
+        return true;
+      }
+    } catch (error) {
+      console.warn(`❌ Content script injection test failed for tab ${tabId}:`, error);
+      return false;
+    }
+
+    return false;
+  } catch (error) {
+    console.error(`❌ Failed to inject content script into tab ${tabId}:`, error);
+    return false;
+  }
+}
+
+/**
  * Send message to content script with retry mechanism
  */
 async function sendMessageWithRetry(
@@ -97,6 +150,14 @@ async function sendMessageWithRetry(
       const tabInfo = await chrome.tabs.get(tabId);
       if (!tabInfo || !tabInfo.url || !isValidResumeUrl(tabInfo.url)) {
         throw new Error(`Tab ${tabId} is no longer a valid resume tab`);
+      }
+
+      // Ensure content script is injected before sending message
+      if (attempt === 1) {
+        const injected = await ensureContentScriptInjected(tabId);
+        if (!injected) {
+          throw new Error(`Failed to inject content script into tab ${tabId}`);
+        }
       }
 
       const response = (await chrome.tabs.sendMessage(
@@ -127,10 +188,7 @@ async function sendMessageWithRetry(
 
       // Try to inject content script again before retry
       try {
-        await chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          files: ['content/resumeBooster.js'],
-        });
+        await ensureContentScriptInjected(tabId);
       } catch (injectionError) {
         // Silent retry injection - only log if it's the last attempt
         if (attempt === maxRetries - 1) {
@@ -1501,7 +1559,17 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
 
     // Always restart timer
     try {
-      await persistentAlarmManager.startTimer(tabId, intervalMs);
+      // Check if timer is already active (might have been restarted by persistentAlarmManager)
+      const currentTimerStatus = persistentAlarmManager.getTimerStatus(tabId);
+      
+      if (!currentTimerStatus.isActive) {
+        await persistentAlarmManager.startTimer(tabId, intervalMs);
+        console.log(`✅ Timer restarted for tab ${tabId} (was inactive)`);
+      } else {
+        // Timer is already active, just update the state
+        console.log(`✅ Timer already active for tab ${tabId}, updating state only`);
+      }
+      
       await updateTabState(tabId, nextState);
 
       await addLogEntry({
@@ -1585,6 +1653,7 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
  * - Testing commands: RUN_SYSTEM_TESTS, ENABLE/DISABLE_TESTING_MODE, GET_TEST_RESULTS
  * - FORCE_START_TIMER: Manually starts timer for a specific tab
  * - GET_LOGS: Retrieves logs from the extension
+ * - BUTTON_STATE: Handles button state updates from content scripts
  *
  * **Response Pattern:**
  * All handlers use async functions and return { success: boolean, data?: any, error?: string }
@@ -1663,6 +1732,10 @@ chrome.runtime.onMessage.addListener(
 
       case 'GET_LOGS':
         handleGetLogs(sendResponse);
+        return true;
+
+      case 'BUTTON_STATE':
+        handleButtonState(message, sender, sendResponse);
         return true;
 
       default:
@@ -2227,6 +2300,44 @@ async function handleGetLogs(
     });
   } catch (error) {
     console.error('Failed to get logs:', error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
+/**
+ * Handle button state updates from content scripts
+ */
+async function handleButtonState(
+  message: any,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response: any) => void
+): Promise<void> {
+  try {
+    const tabId = sender.tab?.id;
+    if (!tabId) {
+      sendResponse({ success: false, error: 'No tab ID provided' });
+      return;
+    }
+
+    console.log(`🔘 Button state update from tab ${tabId}:`, message.data);
+
+    // Log the button state for debugging
+    if (message.data) {
+      const { buttonFound, buttonText, buttonEnabled, selector } = message.data;
+      
+      addLogEntryOptimized({
+        level: 'info',
+        message: `Button state: found=${buttonFound}, text="${buttonText}", enabled=${buttonEnabled}, selector="${selector}"`,
+        tabId: tabId,
+      });
+    }
+
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error('Failed to handle button state:', error);
     sendResponse({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

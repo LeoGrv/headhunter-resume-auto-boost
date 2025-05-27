@@ -150,13 +150,13 @@ function findBoostButton(): HTMLElement | null {
 
   console.log('🎯 Step 4: Aggressive keyword search...');
   const allClickableElements = document.querySelectorAll(
-    'button, a, [role="button"], [class*="button"], [class*="btn"], span[onclick], div[onclick]'
+    'button, a, [role="button"], [class*="button"], [class*="btn"], span[onclick], div[onclick], [data-qa*="button"], [data-qa*="update"], [data-qa*="boost"], [data-qa*="raise"]'
   );
   
   console.log(`🔍 Searching through ${allClickableElements.length} clickable elements...`);
   
   const boostKeywords = [
-    'поднять', 'boost', 'raise', 'update', 'обновить', 'продвинуть', 'refresh'
+    'поднять', 'boost', 'raise', 'update', 'обновить', 'продвинуть', 'refresh', 'поднимать', 'обновлять'
   ];
   
   for (let i = 0; i < allClickableElements.length; i++) {
@@ -243,7 +243,7 @@ function isButtonActive(): boolean {
 }
 
 /**
- * Click the boost button
+ * Click the boost button using multiple methods
  */
 async function clickBoostButton(): Promise<boolean> {
   try {
@@ -263,7 +263,10 @@ async function clickBoostButton(): Promise<boolean> {
       text: button.textContent?.trim(),
       dataQa: button.getAttribute('data-qa'),
       className: button.className,
-      tagName: button.tagName
+      tagName: button.tagName,
+      disabled: (button as HTMLButtonElement).disabled || button.hasAttribute('disabled'),
+      ariaDisabled: button.getAttribute('aria-disabled'),
+      offsetParent: !!button.offsetParent
     });
 
     // Scroll button into view
@@ -274,6 +277,7 @@ async function clickBoostButton(): Promise<boolean> {
 
     // Try multiple click methods for better compatibility
     let clickSuccess = false;
+    const clickResults: string[] = [];
 
     // Method 1: Focus and direct click
     try {
@@ -281,35 +285,55 @@ async function clickBoostButton(): Promise<boolean> {
       await new Promise(resolve => setTimeout(resolve, 100));
       button.click();
       console.log('✅ Method 1: Direct click executed');
+      clickResults.push('Direct click: SUCCESS');
       clickSuccess = true;
     } catch (error) {
       console.warn('❌ Method 1 failed:', error);
+      clickResults.push(`Direct click: FAILED - ${error}`);
     }
 
-    // Method 2: Mouse events sequence
+    // Method 2: Mouse events sequence (more comprehensive)
     try {
-      const mouseEvents = ['mousedown', 'mouseup', 'click'];
-      for (const eventType of mouseEvents) {
-        const event = new MouseEvent(eventType, {
-          bubbles: true,
+      const rect = button.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const mouseEvents = [
+        { type: 'mouseover', bubbles: true },
+        { type: 'mouseenter', bubbles: false },
+        { type: 'mousemove', bubbles: true },
+        { type: 'mousedown', bubbles: true, button: 0 },
+        { type: 'mouseup', bubbles: true, button: 0 },
+        { type: 'click', bubbles: true, button: 0 }
+      ];
+
+      for (const eventConfig of mouseEvents) {
+        const event = new MouseEvent(eventConfig.type, {
+          bubbles: eventConfig.bubbles,
           cancelable: true,
           view: window,
-          button: 0,
+          button: eventConfig.button || 0,
           buttons: 1,
-          clientX: button.getBoundingClientRect().left + button.offsetWidth / 2,
-          clientY: button.getBoundingClientRect().top + button.offsetHeight / 2
+          clientX: centerX,
+          clientY: centerY,
+          screenX: centerX + window.screenX,
+          screenY: centerY + window.screenY
         });
         button.dispatchEvent(event);
       }
-      console.log('✅ Method 2: Mouse event sequence executed');
+      console.log('✅ Method 2: Comprehensive mouse event sequence executed');
+      clickResults.push('Mouse events: SUCCESS');
       clickSuccess = true;
     } catch (error) {
       console.warn('❌ Method 2 failed:', error);
+      clickResults.push(`Mouse events: FAILED - ${error}`);
     }
 
-    // Method 3: Keyboard activation (Enter key)
+    // Method 3: Keyboard activation (Enter and Space)
     try {
       button.focus();
+      
+      // Try Enter key
       const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         code: 'Enter',
@@ -319,10 +343,24 @@ async function clickBoostButton(): Promise<boolean> {
         cancelable: true
       });
       button.dispatchEvent(enterEvent);
-      console.log('✅ Method 3: Enter key event executed');
+      
+      // Try Space key
+      const spaceEvent = new KeyboardEvent('keydown', {
+        key: ' ',
+        code: 'Space',
+        keyCode: 32,
+        which: 32,
+        bubbles: true,
+        cancelable: true
+      });
+      button.dispatchEvent(spaceEvent);
+      
+      console.log('✅ Method 3: Keyboard events (Enter + Space) executed');
+      clickResults.push('Keyboard events: SUCCESS');
       clickSuccess = true;
     } catch (error) {
       console.warn('❌ Method 3 failed:', error);
+      clickResults.push(`Keyboard events: FAILED - ${error}`);
     }
 
     // Method 4: Try to trigger form submission if button is in a form
@@ -331,17 +369,71 @@ async function clickBoostButton(): Promise<boolean> {
       if (form) {
         form.submit();
         console.log('✅ Method 4: Form submission executed');
+        clickResults.push('Form submit: SUCCESS');
         clickSuccess = true;
+      } else {
+        clickResults.push('Form submit: SKIPPED (no form)');
       }
     } catch (error) {
       console.warn('❌ Method 4 failed:', error);
+      clickResults.push(`Form submit: FAILED - ${error}`);
     }
+
+    // Method 5: Try to trigger onclick handler directly
+    try {
+      const onclickHandler = button.onclick;
+      if (onclickHandler) {
+        onclickHandler.call(button, new MouseEvent('click'));
+        console.log('✅ Method 5: Direct onclick handler executed');
+        clickResults.push('Direct onclick: SUCCESS');
+        clickSuccess = true;
+      } else {
+        clickResults.push('Direct onclick: SKIPPED (no handler)');
+      }
+    } catch (error) {
+      console.warn('❌ Method 5 failed:', error);
+      clickResults.push(`Direct onclick: FAILED - ${error}`);
+    }
+
+    // Method 6: Try to find and trigger any parent clickable elements
+    try {
+      const clickableParent = button.closest('[onclick], [role="button"], a, button');
+      if (clickableParent && clickableParent !== button) {
+        (clickableParent as HTMLElement).click();
+        console.log('✅ Method 6: Parent element click executed');
+        clickResults.push('Parent click: SUCCESS');
+        clickSuccess = true;
+      } else {
+        clickResults.push('Parent click: SKIPPED (no clickable parent)');
+      }
+    } catch (error) {
+      console.warn('❌ Method 6 failed:', error);
+      clickResults.push(`Parent click: FAILED - ${error}`);
+    }
+
+    // Method 7: Try programmatic navigation if it's a link
+    try {
+      const href = button.getAttribute('href');
+      if (href && href !== '#') {
+        window.location.href = href;
+        console.log('✅ Method 7: Direct navigation executed');
+        clickResults.push('Direct navigation: SUCCESS');
+        clickSuccess = true;
+      } else {
+        clickResults.push('Direct navigation: SKIPPED (no href)');
+      }
+    } catch (error) {
+      console.warn('❌ Method 7 failed:', error);
+      clickResults.push(`Direct navigation: FAILED - ${error}`);
+    }
+
+    console.log('📊 Click attempt summary:', clickResults);
 
     if (clickSuccess) {
       console.log('🎉 Boost button click attempts completed');
       
       // Wait to see if the page responds
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличил время ожидания
       
       // Check if button state changed (might be disabled after click)
       const buttonAfterClick = findBoostButton();
@@ -350,12 +442,27 @@ async function clickBoostButton(): Promise<boolean> {
         console.log('📊 Button state after click:', {
           found: !!buttonAfterClick,
           active: isStillActive,
-          text: buttonAfterClick.textContent?.trim()
+          text: buttonAfterClick.textContent?.trim(),
+          disabled: (buttonAfterClick as HTMLButtonElement).disabled || buttonAfterClick.hasAttribute('disabled'),
+          ariaDisabled: buttonAfterClick.getAttribute('aria-disabled')
         });
         
         // If button is now disabled/inactive, it likely worked
         if (!isStillActive) {
           console.log('✅ Button appears to be disabled after click - likely successful');
+          return true;
+        }
+      }
+      
+      // Check if page content changed (look for success indicators)
+      const successIndicators = [
+        'обновлено', 'поднято', 'успешно', 'updated', 'boosted', 'success'
+      ];
+      
+      const pageText = document.body.textContent?.toLowerCase() || '';
+      for (const indicator of successIndicators) {
+        if (pageText.includes(indicator)) {
+          console.log(`✅ Found success indicator "${indicator}" on page`);
           return true;
         }
       }

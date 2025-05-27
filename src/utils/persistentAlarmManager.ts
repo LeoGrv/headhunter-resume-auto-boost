@@ -525,9 +525,15 @@ export class PersistentAlarmManager {
           // Reset retry count on success
           timer.retryCount = 0;
 
-          // ✅ CRITICAL FIX: Don't delete timer here!
-          // The Service Worker callback will call startTimer() again with new interval
-          // We just mark it as inactive and let the callback handle restart
+          // ✅ CRITICAL FIX: Keep timer active and restart it immediately
+          // The Service Worker callback will call startTimer() again, but we need to ensure
+          // the timer stays active until then
+          timer.isActive = true;
+          
+          // Update expiration time to prevent immediate re-triggering
+          timer.expirationTime = now + timer.intervalMs;
+          
+          console.log(`🔄 Timer for tab ${tabId} will be restarted by Service Worker callback`);
         } catch (callbackError) {
           console.error(
             `❌ Persistent timer callback failed for tab ${tabId}:`,
