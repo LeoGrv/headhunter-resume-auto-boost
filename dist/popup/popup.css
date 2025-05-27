@@ -158,3 +158,14 @@ main {
 .btn-small:hover {
   background: #dee2e6;
 }
+
+.logs-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.logs-controls .btn-small {
+  margin-top: 0;
+  flex: 1;
+}

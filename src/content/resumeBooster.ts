@@ -2,6 +2,7 @@
 // Content Script for HeadHunter pages
 
 import { BackgroundMessage, ContentMessage } from '../utils/types';
+import { logger } from '../utils/logger';
 
 console.log('HeadHunter Resume Auto-Boost Extension: Content script loaded');
 
@@ -85,6 +86,12 @@ function initialize(): void {
 
     isInitialized = true;
     console.log('HeadHunter Resume Auto-Boost: Content script initialized');
+    
+    // Логируем успешную инициализацию
+    logger.success('ContentScript', 'Successfully initialized', {
+      url: window.location.href,
+      readyState: document.readyState
+    }).catch(() => {}); // Игнорируем ошибки логирования
   } finally {
     isInitializing = false;
   }
@@ -441,6 +448,13 @@ async function clickBoostButton(): Promise<boolean> {
     if (clickSuccess) {
       console.log('🎉 Boost button click attempts completed');
       
+      // Логируем успешный клик
+      logger.success('ContentScript', 'Button click attempts completed', {
+        url: window.location.href,
+        buttonText: button.textContent?.trim(),
+        methods: clickResults
+      }).catch(() => {});
+      
       // Wait to see if the page responds
       await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличил время ожидания
       
@@ -483,6 +497,14 @@ async function clickBoostButton(): Promise<boolean> {
     }
   } catch (error) {
     console.error('❌ Failed to click boost button:', error);
+    
+    // Логируем критическую ошибку
+    logger.critical('ContentScript', 'Failed to click boost button', {
+      error: error instanceof Error ? error.message : String(error),
+      url: window.location.href,
+      buttonFound: !!findBoostButton()
+    }).catch(() => {});
+    
     return false;
   }
 }

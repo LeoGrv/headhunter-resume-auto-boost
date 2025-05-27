@@ -17,6 +17,7 @@ import {
   LogEntry,
   BackgroundMessage,
 } from '../utils/types';
+import { logger } from '../utils/logger';
 
 console.log('🚀 HeadHunter Resume Auto-Boost Extension: Popup script loaded');
 console.log('🚀 Current URL:', window.location.href);
@@ -42,6 +43,7 @@ let logsList: HTMLElement;
 let globalPauseBtn: HTMLButtonElement;
 let settingsBtn: HTMLButtonElement;
 let clearLogsBtn: HTMLButtonElement;
+let exportLogsBtn: HTMLButtonElement;
 
 // State
 let currentSettings: AppSettings;
@@ -124,6 +126,7 @@ async function initializePopup(): Promise<void> {
     ) as HTMLButtonElement;
     settingsBtn = document.getElementById('settings') as HTMLButtonElement;
     clearLogsBtn = document.getElementById('clear-logs') as HTMLButtonElement;
+    exportLogsBtn = document.getElementById('export-logs') as HTMLButtonElement;
 
     console.log('🚀 POPUP INIT - DOM elements found:', {
       statusDot: !!statusDot,
@@ -133,6 +136,7 @@ async function initializePopup(): Promise<void> {
       globalPauseBtn: !!globalPauseBtn,
       settingsBtn: !!settingsBtn,
       clearLogsBtn: !!clearLogsBtn,
+      exportLogsBtn: !!exportLogsBtn,
     });
 
     if (
@@ -142,7 +146,8 @@ async function initializePopup(): Promise<void> {
       !logsList ||
       !globalPauseBtn ||
       !settingsBtn ||
-      !clearLogsBtn
+      !clearLogsBtn ||
+      !exportLogsBtn
     ) {
       console.error('🚀 POPUP INIT - Missing DOM elements!');
       throw new Error('Required DOM elements not found');
@@ -334,6 +339,7 @@ function setupEventListeners(): void {
 
   // Clear logs button
   clearLogsBtn.addEventListener('click', handleClearLogs);
+  exportLogsBtn.addEventListener('click', handleExportLogs);
 
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener(handleBackgroundMessage);
@@ -573,6 +579,36 @@ async function handleClearLogs(): Promise<void> {
     console.log('Logs cleared');
   } catch (error) {
     console.error('Failed to clear logs:', error);
+  }
+}
+
+/**
+ * Handle export logs button click
+ */
+async function handleExportLogs(): Promise<void> {
+  try {
+    const logsText = await logger.exportLogs();
+    
+    if (!logsText.trim()) {
+      alert('No logs to export');
+      return;
+    }
+    
+    // Create and download file
+    const blob = new Blob([logsText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hh-extension-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('✅ Logs exported successfully');
+  } catch (error) {
+    console.error('❌ Failed to export logs:', error);
+    alert('Failed to export logs');
   }
 }
 

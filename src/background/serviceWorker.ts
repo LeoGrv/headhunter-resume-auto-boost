@@ -49,6 +49,7 @@ import {
   ContentMessage,
 } from '../utils/types';
 
+
 console.log('HeadHunter Resume Auto-Boost Extension: Service Worker loaded');
 
 // Extension state
