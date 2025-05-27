@@ -263,14 +263,13 @@ class ErrorRecoverySystem {
         `✅ Content script re-injected during recovery for tab ${tabId}`
       );
 
-      // Recovery strategy 3: Reset timer with longer interval
+      // ✅ ИСПРАВЛЕНИЕ: Recovery с пользовательским интервалом
       const settings = await getSettings();
-      const recoveryInterval =
-        Math.max(settings.clickInterval * 2, 30) * 60 * 1000; // At least 30 minutes
+      const recoveryInterval = settings.clickInterval * 60 * 1000; // ✅ Тот же интервал
       await persistentAlarmManager.startTimer(tabId, recoveryInterval);
 
       console.log(
-        `✅ Recovery successful for tab ${tabId} with ${recoveryInterval / 60000}min interval`
+        `✅ Recovery successful for tab ${tabId} with user interval (${settings.clickInterval}min)`
       );
 
       await addLogEntry({
@@ -1288,8 +1287,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         tabId: tabId,
       });
 
-      // Schedule retry after circuit breaker resets
-      const retryInterval = Math.max(status.timeToReset || 0, 5 * 60 * 1000); // At least 5 minutes
+      // ✅ ИСПРАВЛЕНИЕ: Используем пользовательский интервал даже для circuit breaker
+      const settings = await getSettings();
+      const retryInterval = settings.clickInterval * 60 * 1000; // ✅ Тот же интервал
       await persistentAlarmManager.startTimer(tabId, retryInterval);
       return;
     }
@@ -1365,9 +1365,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
       type: 'BOOST_RESUME',
     };
 
-    // Always restart timer regardless of click success/failure
+    // ✅ ИСПРАВЛЕНИЕ: ВСЕГДА используем пользовательский интервал
     const settings = await getSettings();
-    let intervalMs = settings.clickInterval * 60 * 1000;
+    const intervalMs = settings.clickInterval * 60 * 1000; // ФИКСИРОВАННЫЙ интервал
     let nextState = TabState.ACTIVE;
 
     try {
@@ -1391,10 +1391,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         });
 
         console.log(
-          `✅ Button click successful for tab ${tabId}, restarting timer with normal interval`
+          `✅ Button click successful for tab ${tabId}, restarting timer with user interval (${settings.clickInterval}min)`
         );
         nextState = TabState.ACTIVE;
-        // Use normal interval for successful clicks
       } else {
         // Record failure in circuit breaker
         circuitBreaker.recordFailure(tabId);
@@ -1405,11 +1404,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         });
 
         console.log(
-          `⚠️ Button click failed for tab ${tabId}, restarting timer with shorter interval`
+          `⚠️ Button click failed for tab ${tabId}, restarting timer with SAME user interval (${settings.clickInterval}min)`
         );
-        nextState = TabState.ERROR;
-        // Use shorter interval for failed clicks (5 minutes)
-        intervalMs = 5 * 60 * 1000;
+        nextState = TabState.ACTIVE; // ✅ ИСПРАВЛЕНИЕ: Остаёмся активными
       }
     } catch (messageError) {
       // Record failure in circuit breaker
@@ -1425,10 +1422,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
 
       if (recoverySuccessful) {
         console.log(
-          `✅ Recovery successful for tab ${tabId}, continuing with normal operation`
+          `✅ Recovery successful for tab ${tabId}, continuing with user interval (${settings.clickInterval}min)`
         );
         nextState = TabState.ACTIVE;
-        // Use normal interval after successful recovery
       } else {
         await addLogEntry({
           level: 'error',
@@ -1437,11 +1433,9 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         });
 
         console.log(
-          `❌ Communication failed for tab ${tabId}, restarting timer with shorter interval`
+          `❌ Communication failed for tab ${tabId}, restarting timer with SAME user interval (${settings.clickInterval}min)`
         );
-        nextState = TabState.ERROR;
-        // Use shorter interval for communication errors (5 minutes)
-        intervalMs = 5 * 60 * 1000;
+        nextState = TabState.ACTIVE; // ✅ ИСПРАВЛЕНИЕ: Остаёмся активными
       }
     }
 
@@ -1477,12 +1471,12 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
       // Set tab to error state if timer restart fails
       await updateTabState(tabId, TabState.ERROR);
 
-      // ✅ CRITICAL: Try to restart timer with fallback interval even if first attempt failed
+      // ✅ ИСПРАВЛЕНИЕ: Используем тот же пользовательский интервал для fallback
       try {
         console.log(
-          `🔄 Attempting fallback timer restart for tab ${tabId} with 10-minute interval`
+          `🔄 Attempting fallback timer restart for tab ${tabId} with user interval (${settings.clickInterval}min)`
         );
-        await persistentAlarmManager.startTimer(tabId, 10 * 60 * 1000); // 10 minutes fallback
+        await persistentAlarmManager.startTimer(tabId, intervalMs); // ✅ Тот же интервал
         console.log(`✅ Fallback timer started for tab ${tabId}`);
       } catch (fallbackError) {
         console.error(
@@ -1511,20 +1505,17 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
         tabId: tabId,
       });
 
-      // ✅ CRITICAL: Emergency timer restart even if everything else failed
+      // ✅ ИСПРАВЛЕНИЕ: Emergency timer с пользовательским интервалом
       try {
         console.log(
           `🚨 Emergency timer restart for tab ${tabId} after critical error`
         );
         const settings = await getSettings();
-        const emergencyInterval = Math.max(
-          settings.clickInterval * 60 * 1000,
-          15 * 60 * 1000
-        ); // At least 15 minutes
+        const emergencyInterval = settings.clickInterval * 60 * 1000; // ✅ Тот же интервал
         await persistentAlarmManager.startTimer(tabId, emergencyInterval);
-        await updateTabState(tabId, TabState.ERROR);
+        await updateTabState(tabId, TabState.ACTIVE); // ✅ Остаёмся активными
         console.log(
-          `✅ Emergency timer started for tab ${tabId} with ${emergencyInterval / 1000 / 60} minute interval`
+          `✅ Emergency timer started for tab ${tabId} with user interval (${settings.clickInterval}min)`
         );
       } catch (emergencyError) {
         console.error(
