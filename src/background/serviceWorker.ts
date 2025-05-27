@@ -1345,19 +1345,57 @@ async function handleTimerExpiration(tabId: number): Promise<void> {
       return;
     }
 
-    // First, try to inject content script if it's not already loaded
+    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Принудительная инъекция content script
     try {
-      console.log(`🔧 Ensuring content script is loaded for tab ${tabId}`);
+      console.log(`🔧 ПРИНУДИТЕЛЬНАЯ инъекция content script для tab ${tabId}`);
+      
+      // Сначала проверим, загружен ли content script
+      let scriptLoaded = false;
+      try {
+        const testResponse = await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
+        scriptLoaded = !!testResponse;
+        console.log(`📋 Content script уже загружен для tab ${tabId}: ${scriptLoaded}`);
+      } catch (testError) {
+        console.log(`📋 Content script НЕ загружен для tab ${tabId}, инжектируем...`);
+      }
+      
+      // Принудительно инжектируем content script
       await chrome.scripting.executeScript({
         target: { tabId: tabId },
         files: ['content/resumeBooster.js'],
       });
-      console.log(`✅ Content script injected for tab ${tabId}`);
+      console.log(`✅ Content script ПРИНУДИТЕЛЬНО инжектирован для tab ${tabId}`);
+      
+      // Ждём немного для инициализации
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Проверяем, что script теперь отвечает
+      try {
+        const verifyResponse = await chrome.tabs.sendMessage(tabId, { type: 'TEST_MESSAGE' });
+        console.log(`✅ Content script ПОДТВЕРЖДЁН для tab ${tabId}:`, verifyResponse);
+      } catch (verifyError) {
+        console.error(`❌ Content script НЕ ОТВЕЧАЕТ после инъекции для tab ${tabId}:`, verifyError);
+        throw new Error(`Content script не отвечает после инъекции: ${verifyError}`);
+      }
+      
     } catch (injectionError) {
-      console.log(
-        `ℹ️ Content script injection failed (may already be loaded): ${injectionError}`
-      );
-      // This is expected if the script is already loaded
+      console.error(`❌ КРИТИЧЕСКАЯ ОШИБКА инъекции content script для tab ${tabId}:`, injectionError);
+      
+      // Попробуем альтернативный метод инъекции
+      try {
+        console.log(`🔄 Пробуем альтернативную инъекцию для tab ${tabId}...`);
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          func: () => {
+            console.log('🚀 Alternative content script injection test');
+            (window as any).alternativeInjectionTest = true;
+          }
+        });
+        console.log(`✅ Альтернативная инъекция успешна для tab ${tabId}`);
+      } catch (altError) {
+        console.error(`❌ Альтернативная инъекция ПРОВАЛИЛАСЬ для tab ${tabId}:`, altError);
+        throw new Error(`Все методы инъекции провалились: ${injectionError}`);
+      }
     }
 
     // Send message to content script to click button

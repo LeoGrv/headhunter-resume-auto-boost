@@ -600,6 +600,19 @@ function messageHandler(
       sendResponse({ type: 'BUTTON_STATE', success: true });
       return false;
 
+    case 'TEST_MESSAGE':
+      console.log('🧪 Content script получил TEST_MESSAGE');
+      sendResponse({ 
+        type: 'TEST_RESPONSE', 
+        success: true, 
+        data: { 
+          loaded: true, 
+          timestamp: Date.now(),
+          url: window.location.href 
+        } 
+      });
+      return false;
+
     default:
       console.warn('Unknown message type:', message.type);
       sendResponse({

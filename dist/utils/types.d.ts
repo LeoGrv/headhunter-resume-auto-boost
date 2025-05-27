@@ -51,14 +51,14 @@ export interface LogEntry {
     data?: unknown;
 }
 export interface BackgroundMessage {
-    type: 'BOOST_RESUME' | 'CHECK_BUTTON_STATE' | 'REFRESH_PAGE' | 'GET_STATE' | 'GLOBAL_PAUSE_TOGGLE' | 'SET_GLOBAL_PAUSE' | 'SETTINGS_UPDATE' | 'TAB_PAUSE_TOGGLE' | 'TAB_REMOVE' | 'GET_EXTENSION_STATE' | 'SET_TAB_PAUSE' | 'SET_INTERVAL' | 'REFRESH_TABS';
+    type: 'BOOST_RESUME' | 'CHECK_BUTTON_STATE' | 'REFRESH_PAGE' | 'GET_STATE' | 'GLOBAL_PAUSE_TOGGLE' | 'SET_GLOBAL_PAUSE' | 'SETTINGS_UPDATE' | 'TAB_PAUSE_TOGGLE' | 'TAB_REMOVE' | 'GET_EXTENSION_STATE' | 'SET_TAB_PAUSE' | 'SET_INTERVAL' | 'REFRESH_TABS' | 'TEST_MESSAGE';
     tabId?: number;
     data?: unknown;
     paused?: boolean;
     interval?: number;
 }
 export interface ContentMessage {
-    type: 'BUTTON_CLICKED' | 'BUTTON_STATE' | 'PAGE_REFRESHED' | 'ERROR';
+    type: 'BUTTON_CLICKED' | 'BUTTON_STATE' | 'PAGE_REFRESHED' | 'ERROR' | 'TEST_RESPONSE';
     success: boolean;
     data?: unknown;
 }

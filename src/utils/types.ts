@@ -84,7 +84,8 @@ export interface BackgroundMessage {
     | 'GET_EXTENSION_STATE'
     | 'SET_TAB_PAUSE'
     | 'SET_INTERVAL'
-    | 'REFRESH_TABS';
+    | 'REFRESH_TABS'
+    | 'TEST_MESSAGE';
   tabId?: number;
   data?: unknown;
   paused?: boolean;
@@ -92,7 +93,7 @@ export interface BackgroundMessage {
 }
 
 export interface ContentMessage {
-  type: 'BUTTON_CLICKED' | 'BUTTON_STATE' | 'PAGE_REFRESHED' | 'ERROR';
+  type: 'BUTTON_CLICKED' | 'BUTTON_STATE' | 'PAGE_REFRESHED' | 'ERROR' | 'TEST_RESPONSE';
   success: boolean;
   data?: unknown;
 }
