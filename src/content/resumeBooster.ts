@@ -96,6 +96,13 @@ function initialize(): void {
 function findBoostButton(): HTMLElement | null {
   console.log('🔍 Searching for boost button...');
 
+  // First try the most reliable selector
+  const directButton = document.querySelector('button[data-qa="resume-update-button"]') as HTMLElement;
+  if (directButton) {
+    console.log('✅ Found button via direct selector:', directButton);
+    return directButton;
+  }
+
   // Priority search: Look for exact text matches first
   const exactTextMatches = [
     'Поднять в поиске',
@@ -111,6 +118,8 @@ function findBoostButton(): HTMLElement | null {
     for (let i = 0; i < allElements.length; i++) {
       const element = allElements[i] as HTMLElement;
       const elementText = element.textContent?.trim() || '';
+      
+      console.log(`🔍 Checking element: "${elementText}" vs "${exactText}"`);
       
       if (elementText === exactText) {
         console.log(`✅ Found exact match for "${exactText}":`, element);
@@ -163,7 +172,7 @@ function findBoostButton(): HTMLElement | null {
     const element = allClickableElements[i] as HTMLElement;
     const text = element.textContent?.toLowerCase().trim() || '';
     const dataQa = element.getAttribute('data-qa')?.toLowerCase() || '';
-    const className = element.className?.toLowerCase() || '';
+    const className = (element.className || '').toLowerCase();
     
     // Check if element contains boost-related keywords
     for (const keyword of boostKeywords) {
@@ -868,12 +877,22 @@ function cleanup(): void {
   console.log('Content script cleaned up');
 }
 
-// Initialize when DOM is ready
+// Initialize immediately and on DOM ready
+initialize();
+
+// Also try after DOM is fully loaded
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initialize);
-} else {
-  initialize();
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initialize, 100);
+  });
+} else if (document.readyState === 'interactive') {
+  setTimeout(initialize, 100);
 }
+
+// Force initialization after page load
+window.addEventListener('load', () => {
+  setTimeout(initialize, 500);
+});
 
 // Clean up on page unload
 window.addEventListener('beforeunload', cleanup);
