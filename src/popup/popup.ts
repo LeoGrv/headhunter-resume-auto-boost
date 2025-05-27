@@ -22,6 +22,18 @@ console.log('🚀 HeadHunter Resume Auto-Boost Extension: Popup script loaded');
 console.log('🚀 Current URL:', window.location.href);
 console.log('🚀 Document ready state:', document.readyState);
 
+/**
+ * Update version info in popup
+ */
+function updateVersionInfo(): void {
+  const versionElement = document.querySelector('.version-info') as HTMLElement;
+  if (versionElement) {
+    const manifest = chrome.runtime.getManifest();
+    versionElement.textContent = `v${manifest.version} - Final Release ✅`;
+    console.log('📋 Version updated to:', manifest.version);
+  }
+}
+
 // DOM Elements
 let statusDot: HTMLElement;
 let statusText: HTMLElement;
@@ -146,6 +158,7 @@ async function initializePopup(): Promise<void> {
     setupEventListeners();
 
     // Update UI
+    updateVersionInfo();
     updateStatusIndicator();
     renderManagedTabs();
     renderLogs();
