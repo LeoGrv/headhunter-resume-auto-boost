@@ -1,0 +1,248 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Popup UI Snapshot Tests Button States should match snapshot with clear logs button 1`] = `"<button id="clear-logs" class="btn btn-small">Clear Logs</button>"`;
+
+exports[`Popup UI Snapshot Tests Button States should match snapshot with pause button active 1`] = `"<button id="global-pause" class="btn btn-secondary">⏸ Pause All</button>"`;
+
+exports[`Popup UI Snapshot Tests Button States should match snapshot with resume button active 1`] = `"<button id="global-pause" class="btn btn-primary">▶ Resume All</button>"`;
+
+exports[`Popup UI Snapshot Tests Button States should match snapshot with settings button 1`] = `"<button id="settings" class="btn btn-primary">⚙️ Settings</button>"`;
+
+exports[`Popup UI Snapshot Tests Dynamic Content States should match snapshot with active state 1`] = `
+"<header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot active"></span>
+                <span class="status-text">Active (3 tabs)</span>
+            </div>
+        </header>"
+`;
+
+exports[`Popup UI Snapshot Tests Dynamic Content States should match snapshot with loading state 1`] = `
+"<header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot loading"></span>
+                <span class="status-text">Loading...</span>
+            </div>
+        </header>"
+`;
+
+exports[`Popup UI Snapshot Tests Dynamic Content States should match snapshot with paused state 1`] = `
+"<header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot paused"></span>
+                <span class="status-text">Paused</span>
+            </div>
+        </header>"
+`;
+
+exports[`Popup UI Snapshot Tests Dynamic Content States should match snapshot with sample logs 1`] = `
+"<div class="logs-section">
+                <h2>Recent Activity</h2>
+                <div class="logs-list">
+          <div class="log-entry success">
+            <span class="log-time">14:25:30</span>
+            <span class="log-message">Resume boosted successfully</span>
+            <span class="log-tab">Tab 1</span>
+          </div>
+          <div class="log-entry info">
+            <span class="log-time">14:20:15</span>
+            <span class="log-message">Timer started for new tab</span>
+            <span class="log-tab">Tab 2</span>
+          </div>
+          <div class="log-entry warning">
+            <span class="log-time">14:15:45</span>
+            <span class="log-message">Boost limit reached for today</span>
+            <span class="log-tab">Tab 1</span>
+          </div>
+        </div>
+                <button id="clear-logs" class="btn btn-small">Clear Logs</button>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Dynamic Content States should match snapshot with sample tabs 1`] = `
+"<div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list">
+          <div class="tab-item active">
+            <div class="tab-info">
+              <span class="tab-title">Senior Frontend Developer</span>
+              <span class="tab-url">hh.ru/resume/123456</span>
+            </div>
+            <div class="tab-controls">
+              <span class="timer-status">Next boost: 15:30</span>
+              <button class="btn-small pause">⏸</button>
+            </div>
+          </div>
+          <div class="tab-item paused">
+            <div class="tab-info">
+              <span class="tab-title">Full Stack Developer</span>
+              <span class="tab-url">hh.ru/resume/789012</span>
+            </div>
+            <div class="tab-controls">
+              <span class="timer-status">Paused</span>
+              <button class="btn-small resume">▶</button>
+            </div>
+          </div>
+        </div>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Empty States should match snapshot with no logs 1`] = `
+"<div class="logs-section">
+                <h2>Recent Activity</h2>
+                <div class="logs-list"><div class="empty-state">No recent activity</div></div>
+                <button id="clear-logs" class="btn btn-small">Clear Logs</button>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Empty States should match snapshot with no tabs 1`] = `
+"<div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list"><div class="empty-state">No resume tabs detected</div></div>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Error States should match snapshot with error state 1`] = `
+"<header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot error"></span>
+                <span class="status-text">Error: Connection failed</span>
+            </div>
+        </header>"
+`;
+
+exports[`Popup UI Snapshot Tests Error States should match snapshot with tab error 1`] = `
+"<div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list">
+          <div class="tab-item error">
+            <div class="tab-info">
+              <span class="tab-title">Resume Tab (Error)</span>
+              <span class="tab-url">hh.ru/resume/error</span>
+            </div>
+            <div class="tab-controls">
+              <span class="timer-status error">Boost failed</span>
+              <button class="btn-small retry">🔄</button>
+            </div>
+          </div>
+        </div>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Initial HTML Structure should have controls section 1`] = `
+"<div class="controls-section">
+                <h2>Controls</h2>
+                <div class="global-controls">
+                    <button id="global-pause" class="btn btn-secondary">⏸ Pause All</button>
+                    <button id="settings" class="btn btn-primary">⚙️ Settings</button>
+                </div>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Initial HTML Structure should have correct header structure 1`] = `
+"<header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Loading...</span>
+            </div>
+        </header>"
+`;
+
+exports[`Popup UI Snapshot Tests Initial HTML Structure should have correct main content structure 1`] = `
+"<main>
+            <div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <h2>Controls</h2>
+                <div class="global-controls">
+                    <button id="global-pause" class="btn btn-secondary">⏸ Pause All</button>
+                    <button id="settings" class="btn btn-primary">⚙️ Settings</button>
+                </div>
+            </div>
+            
+            <div class="logs-section">
+                <h2>Recent Activity</h2>
+                <div class="logs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <button id="clear-logs" class="btn btn-small">Clear Logs</button>
+            </div>
+        </main>"
+`;
+
+exports[`Popup UI Snapshot Tests Initial HTML Structure should have logs section 1`] = `
+"<div class="logs-section">
+                <h2>Recent Activity</h2>
+                <div class="logs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <button id="clear-logs" class="btn btn-small">Clear Logs</button>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Initial HTML Structure should have tabs section 1`] = `
+"<div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>"
+`;
+
+exports[`Popup UI Snapshot Tests Initial HTML Structure should match popup HTML snapshot 1`] = `
+"<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeadHunter Resume Auto-Boost</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Loading...</span>
+            </div>
+        </header>
+        
+        <main>
+            <div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <h2>Controls</h2>
+                <div class="global-controls">
+                    <button id="global-pause" class="btn btn-secondary">⏸ Pause All</button>
+                    <button id="settings" class="btn btn-primary">⚙️ Settings</button>
+                </div>
+            </div>
+            
+            <div class="logs-section">
+                <h2>Recent Activity</h2>
+                <div class="logs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <button id="clear-logs" class="btn btn-small">Clear Logs</button>
+            </div>
+        </main>
+    </div>
+    
+    <script src="popup.js"></script>
+
+ </body></html>"
+`;

@@ -1,0 +1,9 @@
+{
+  "overall": 4,
+  "lines": 3.56,
+  "branches": 3.07,
+  "functions": 4.84,
+  "statements": 3.47,
+  "badgeUrl": "https://img.shields.io/badge/coverage-4%25-red",
+  "timestamp": "2025-05-27T08:37:25.447Z"
+}

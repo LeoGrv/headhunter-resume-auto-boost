@@ -1,0 +1,74 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run TypeScript check
+      run: npm run lint
+      
+    - name: Run unit tests with coverage
+      run: npm run test:coverage
+      
+    - name: Build extension
+      run: npm run build
+      
+    - name: Verify build artifacts
+      run: |
+        if [ ! -f "dist/manifest.json" ]; then
+          echo "❌ manifest.json not found in build"
+          exit 1
+        fi
+        if [ ! -f "dist/background/serviceWorker.js" ]; then
+          echo "❌ serviceWorker.js not found in build"
+          exit 1
+        fi
+        if [ ! -f "dist/content/resumeBooster.js" ]; then
+          echo "❌ resumeBooster.js not found in build"
+          exit 1
+        fi
+        if [ ! -f "dist/popup/popup.html" ]; then
+          echo "❌ popup.html not found in build"
+          exit 1
+        fi
+        echo "✅ All required build artifacts present"
+        
+    - name: Check extension size
+      run: |
+        cd dist
+        EXTENSION_SIZE=$(du -sh . | cut -f1)
+        echo "📦 Extension size: $EXTENSION_SIZE"
+        
+        # Check if extension is too large (Chrome Web Store limit is 128MB)
+        SIZE_BYTES=$(du -sb . | cut -f1)
+        MAX_SIZE=$((100 * 1024 * 1024))
+        
+        if [ $SIZE_BYTES -gt $MAX_SIZE ]; then
+          echo "⚠️ Warning: Extension size is approaching Chrome Web Store limits"
+        else
+          echo "✅ Extension size is within acceptable limits"
+        fi
+        
+    - name: Run E2E tests (if not draft)
+      if: github.event.pull_request.draft == false
+      run: npm run test:e2e:headless
+      env:
+        HEADLESS: true 

@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Coverage reports
+coverage/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Package files
+*.tgz
+*.tar.gz
+
+# Public assets (generated)
+public/icons/
+
+# Test snapshots
+**/__snapshots__/
+
+# Webpack bundles
+*.bundle.js
+*.chunk.js
+
+# Source maps
+*.map 

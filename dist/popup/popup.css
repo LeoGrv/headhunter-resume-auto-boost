@@ -1,0 +1,144 @@
+/* HeadHunter Resume Auto-Boost Extension - Popup Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  background: #f8f9fa;
+  width: 350px;
+  min-height: 400px;
+}
+
+.container {
+  padding: 16px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6c757d;
+}
+
+.status-dot.active {
+  background: #28a745;
+}
+
+.status-dot.paused {
+  background: #ffc107;
+}
+
+.status-dot.error {
+  background: #dc3545;
+}
+
+.status-text {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tabs-section,
+.controls-section,
+.logs-section {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.tabs-list,
+.logs-list {
+  min-height: 60px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.global-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: #e9ecef;
+  color: #495057;
+  margin-top: 8px;
+}
+
+.btn-small:hover {
+  background: #dee2e6;
+}

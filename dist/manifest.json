@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "HeadHunter Resume Auto-Boost",
+  "version": "1.0.0",
+  "description": "Automatically boost your HeadHunter resumes in search results to maintain visibility",
+  
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "alarms",
+    "windows"
+  ],
+  
+  "host_permissions": [
+    "*://*.hh.kz/*",
+    "*://*.hh.ru/*"
+  ],
+  
+  "background": {
+    "service_worker": "background/serviceWorker.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.hh.kz/resume/*",
+        "*://*.hh.ru/resume/*"
+      ],
+      "js": ["content/resumeBooster.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "HeadHunter Resume Auto-Boost",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["content/*"],
+      "matches": ["*://*.hh.kz/*", "*://*.hh.ru/*"]
+    }
+  ]
+} 

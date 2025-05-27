@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeadHunter Resume Auto-Boost</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HH Resume Boost</h1>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Loading...</span>
+            </div>
+        </header>
+        
+        <main>
+            <div class="tabs-section">
+                <h2>Resume Tabs</h2>
+                <div class="tabs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <h2>Controls</h2>
+                <div class="global-controls">
+                    <button id="global-pause" class="btn btn-secondary">⏸ Pause All</button>
+                    <button id="settings" class="btn btn-primary">⚙️ Settings</button>
+                </div>
+            </div>
+            
+            <div class="logs-section">
+                <h2>Recent Activity</h2>
+                <div class="logs-list">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <button id="clear-logs" class="btn btn-small">Clear Logs</button>
+            </div>
+        </main>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html> 

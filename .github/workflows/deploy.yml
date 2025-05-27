@@ -1,0 +1,110 @@
+name: Deploy to Chrome Web Store
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  deploy:
+    name: Deploy Extension
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run full test suite
+      run: |
+        npm run lint
+        npm run test:ci
+        npm run test:e2e:headless
+      env:
+        HEADLESS: true
+        
+    - name: Build extension for production
+      run: npm run build
+      
+    - name: Update manifest version
+      run: |
+        VERSION="${{ github.event.inputs.version || github.event.release.tag_name }}"
+        VERSION="${VERSION#v}" # Remove 'v' prefix if present
+        
+        # Update version in manifest.json
+        sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" dist/manifest.json
+        
+        echo "Updated manifest.json version to: $VERSION"
+        
+    - name: Create production package
+      run: |
+        cd dist
+        zip -r ../extension-production.zip .
+        cd ..
+        
+    - name: Validate extension package
+      run: |
+        # Check package size
+        SIZE=$(stat -c%s extension-production.zip)
+        MAX_SIZE=$((128 * 1024 * 1024)) # 128MB Chrome Web Store limit
+        
+        if [ $SIZE -gt $MAX_SIZE ]; then
+          echo "❌ Extension package too large: $(($SIZE / 1024 / 1024))MB (max 128MB)"
+          exit 1
+        fi
+        
+        echo "✅ Extension package size: $(($SIZE / 1024 / 1024))MB"
+        
+        # Verify required files
+        unzip -l extension-production.zip | grep -q "manifest.json" || (echo "❌ manifest.json missing" && exit 1)
+        unzip -l extension-production.zip | grep -q "background/serviceWorker.js" || (echo "❌ serviceWorker.js missing" && exit 1)
+        
+        echo "✅ Extension package validated"
+        
+    - name: Upload to Chrome Web Store (Manual)
+      run: |
+        echo "🚀 Extension is ready for Chrome Web Store submission!"
+        echo ""
+        echo "📦 Package: extension-production.zip"
+        echo "📋 Next steps:"
+        echo "1. Download the extension-production.zip artifact"
+        echo "2. Go to Chrome Web Store Developer Dashboard"
+        echo "3. Upload the package manually"
+        echo "4. Fill in store listing details"
+        echo "5. Submit for review"
+        echo ""
+        echo "🔗 Chrome Web Store Developer Dashboard:"
+        echo "   https://chrome.google.com/webstore/devconsole/"
+        
+    - name: Upload production package
+      uses: actions/upload-artifact@v4
+      with:
+        name: chrome-extension-production
+        path: extension-production.zip
+        retention-days: 90
+        
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ github.event.inputs.version || github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
+        echo "**Package:** chrome-extension-production.zip" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 Manual Steps Required" >> $GITHUB_STEP_SUMMARY
+        echo "1. Download the production package from artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "2. Upload to Chrome Web Store Developer Dashboard" >> $GITHUB_STEP_SUMMARY
+        echo "3. Complete store listing and submit for review" >> $GITHUB_STEP_SUMMARY 
