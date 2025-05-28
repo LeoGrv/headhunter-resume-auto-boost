@@ -194,9 +194,9 @@ describe('Storage Functions', () => {
       await expect(clearLogs()).rejects.toThrow('Failed to clear logs');
     });
 
-    it('should limit logs to 10 entries', async () => {
-      // Create 12 existing logs
-      const existingLogs: LogEntry[] = Array.from({ length: 12 }, (_, i) => ({
+    it('should limit logs to 200 entries', async () => {
+      // Create 202 existing logs
+      const existingLogs: LogEntry[] = Array.from({ length: 202 }, (_, i) => ({
         level: 'info' as const,
         message: `Log ${i}`,
         timestamp: Date.now() - i * 1000,
@@ -215,9 +215,9 @@ describe('Storage Functions', () => {
 
       await addLogEntry(newLogEntry);
 
-      // Should have been called with only 10 entries (new + 9 old)
+      // Should have been called with only 200 entries (new + 199 old)
       const setCall = (chrome.storage.local.set as jest.Mock).mock.calls[0][0];
-      expect(setCall.activity_logs).toHaveLength(10);
+      expect(setCall.activity_logs).toHaveLength(200);
       expect(setCall.activity_logs[0].message).toBe('New log entry');
     });
   });

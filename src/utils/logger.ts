@@ -9,7 +9,7 @@ export interface LogEntry {
 
 class Logger {
   private logs: LogEntry[] = [];
-  private maxLogs = 100; // Ограничиваем количество логов
+  private maxLogs = 500; // Ограничиваем количество логов
   private storageKey = 'extension_error_logs';
 
   async log(level: LogEntry['level'], component: string, message: string, data?: any): Promise<void> {
@@ -18,7 +18,7 @@ class Logger {
       level,
       component,
       message,
-      data: data ? JSON.stringify(data).substring(0, 200) : undefined // Ограничиваем размер данных
+      data: data ? JSON.stringify(data).substring(0, 2000) : undefined // Ограничиваем размер данных
     };
 
     this.logs.push(entry);

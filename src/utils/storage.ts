@@ -196,8 +196,8 @@ export async function addLogEntry(
       timestamp: Date.now(),
     };
 
-    // Keep only last 10 entries
-    const updatedLogs = [newEntry, ...logs].slice(0, 10);
+    // Keep only last 200 entries
+    const updatedLogs = [newEntry, ...logs].slice(0, 200);
 
     await chrome.storage.local.set({
       [STORAGE_KEYS.LOGS]: updatedLogs,
