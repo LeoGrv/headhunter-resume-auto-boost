@@ -1,0 +1,28 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="62" fill="url(#grad1)" />
+  
+  <!-- Inner circle -->
+  <circle cx="64" cy="64" r="42.666666666666664" fill="url(#grad2)" opacity="0.8" />
+  
+  <!-- Star icon -->
+  <g transform="translate(64, 64)">
+    <path d="M0,-32 L10.666666666666666,-10.666666666666666 L32,0 L10.666666666666666,10.666666666666666 L0,32 L-10.666666666666666,10.666666666666666 L-32,0 L-10.666666666666666,-10.666666666666666 Z" 
+          fill="white" opacity="0.9" />
+  </g>
+  
+  <!-- Small accent dots -->
+  <circle cx="96" cy="32" r="8" fill="white" opacity="0.6" />
+  <circle cx="32" cy="96" r="8" fill="white" opacity="0.6" />
+</svg>

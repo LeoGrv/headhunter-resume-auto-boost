@@ -4,50 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HeadHunter Resume Auto-Boost</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-top">
-                <h1>HH Resume Boost</h1>
-                <div class="status-indicator">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Loading...</span>
-                </div>
-            </div>
-            <div class="version-info">v1.2.44 - Final Release ✅</div>
-        </header>
+    <div class="app-container">
+        <!-- Background Elements -->
+        <div class="bg-gradient"></div>
+        <div class="bg-pattern"></div>
         
-        <main>
-            <div class="tabs-section">
-                <h2>Resume Tabs</h2>
-                <div class="tabs-list">
-                    <!-- Dynamic content will be inserted here -->
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <!-- Header Section -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="brand-section">
+                        <div class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor"/>
+                                <path d="M19 15L19.5 17L21 17.5L19.5 18L19 20L18.5 18L17 17.5L18.5 17L19 15Z" fill="currentColor"/>
+                                <path d="M5 15L5.5 17L7 17.5L5.5 18L5 20L4.5 18L3 17.5L4.5 17L5 15Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="brand-text">
+                            <h1 class="app-title">HH Resume Boost</h1>
+                            <div class="version-badge">
+                                <span class="version-info">v1.2.46</span>
+                                <span class="version-status">ULTIMATE STEALTH</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-section">
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="controls-section">
-                <h2>Controls</h2>
-                <div class="global-controls">
-                    <button id="global-pause" class="btn btn-secondary">⏸ Pause All</button>
-                    <button id="settings" class="btn btn-primary">⚙️ Settings</button>
+            </header>
+
+            <!-- Main Dashboard -->
+            <main class="dashboard">
+                <!-- Quick Actions Card -->
+                <div class="card quick-actions-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <path d="M13 3L4 14H11L10 21L19 10H12L13 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Quick Actions
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="action-buttons">
+                            <button id="global-pause" class="action-btn primary">
+                                <div class="btn-icon">⏸</div>
+                                <div class="btn-content">
+                                    <span class="btn-title">Pause All</span>
+                                    <span class="btn-subtitle">Stop all automation</span>
+                                </div>
+                            </button>
+                            <button id="settings" class="action-btn secondary">
+                                <div class="btn-icon">⚙️</div>
+                                <div class="btn-content">
+                                    <span class="btn-title">Settings</span>
+                                    <span class="btn-subtitle">Configure options</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="logs-section">
-                <h2>Recent Activity</h2>
-                <div class="logs-list">
-                    <!-- Dynamic content will be inserted here -->
+
+                <!-- Resume Tabs Card -->
+                <div class="card tabs-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Active Resume Tabs
+                        </h2>
+                        <div class="card-badge">
+                            <span class="badge-count">0</span>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tabs-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">📄</div>
+                                <p class="empty-title">No active tabs</p>
+                                <p class="empty-subtitle">Open a HeadHunter resume page to start</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="logs-controls">
-                    <button id="clear-logs" class="btn btn-small">Clear Logs</button>
-                    <button id="export-logs" class="btn btn-small">📄 Export</button>
+
+                <!-- Activity Log Card -->
+                <div class="card logs-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 11H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Recent Activity
+                        </h2>
+                        <div class="card-actions">
+                            <button id="clear-logs" class="icon-btn" title="Clear logs">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button id="export-logs" class="icon-btn" title="Export logs">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="logs-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">📊</div>
+                                <p class="empty-title">No recent activity</p>
+                                <p class="empty-subtitle">Activity will appear here when automation starts</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
-    
+
     <script src="popup.js"></script>
 </body>
 </html> 

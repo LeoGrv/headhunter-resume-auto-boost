@@ -673,11 +673,23 @@ function updateStatusIndicator(status?: string, text?: string): void {
  */
 function updateGlobalPauseButton(): void {
   if (isGlobalPaused) {
-    globalPauseBtn.textContent = '▶️ Resume All';
-    globalPauseBtn.className = 'btn btn-primary';
+    globalPauseBtn.innerHTML = `
+      <div class="btn-icon">▶️</div>
+      <div class="btn-content">
+        <span class="btn-title">Resume All</span>
+        <span class="btn-subtitle">Start automation</span>
+      </div>
+    `;
+    globalPauseBtn.className = 'action-btn secondary';
   } else {
-    globalPauseBtn.textContent = '⏸️ Pause All';
-    globalPauseBtn.className = 'btn btn-secondary';
+    globalPauseBtn.innerHTML = `
+      <div class="btn-icon">⏸</div>
+      <div class="btn-content">
+        <span class="btn-title">Pause All</span>
+        <span class="btn-subtitle">Stop all automation</span>
+      </div>
+    `;
+    globalPauseBtn.className = 'action-btn primary';
   }
 }
 
@@ -685,13 +697,17 @@ function updateGlobalPauseButton(): void {
  * Render managed tabs
  */
 function renderManagedTabs(): void {
+  const badgeCount = document.querySelector('.badge-count') as HTMLElement;
+  if (badgeCount) {
+    badgeCount.textContent = managedTabs.length.toString();
+  }
+
   if (managedTabs.length === 0) {
     tabsList.innerHTML = `
-      <div style="text-align: center; padding: 20px; color: #6c757d;">
-        <p>No HeadHunter resume tabs found</p>
-        <p style="font-size: 11px; margin-top: 8px;">
-          Open your resume page on hh.ru or hh.kz to start auto-boosting
-        </p>
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <p class="empty-title">No active tabs</p>
+        <p class="empty-subtitle">Open a HeadHunter resume page to start</p>
       </div>
     `;
     return;
@@ -706,28 +722,20 @@ function renderManagedTabs(): void {
 
       return `
       <div class="tab-item" data-tab-id="${tab.tabId}">
-        <div class="tab-header">
+        <div class="tab-info">
           <div class="tab-title" title="${tab.url}">
-            ${truncateText(tab.title || tab.url, 30)}
+            ${truncateText(tab.title || tab.url, 35)}
           </div>
-          <div class="tab-status ${stateClass}">${stateText}</div>
-        </div>
-        <div class="tab-details">
-          <div class="tab-info">
-            <span class="info-label">Next click:</span>
-            <span class="info-value">${timeRemaining}</span>
-          </div>
-          <div class="tab-info">
-            <span class="info-label">Last click:</span>
-            <span class="info-value">${lastClick}</span>
+          <div class="tab-status ${stateClass}">
+            ${stateText} • Next: ${timeRemaining} • Last: ${lastClick}
           </div>
         </div>
         <div class="tab-actions">
-          <button class="btn btn-small tab-pause-btn" data-tab-id="${tab.tabId}">
-            ${tab.state === TabState.PAUSED ? '▶️ Resume' : '⏸️ Pause'}
+          <button class="tab-btn tab-pause-btn" data-tab-id="${tab.tabId}" title="${tab.state === TabState.PAUSED ? 'Resume' : 'Pause'}">
+            ${tab.state === TabState.PAUSED ? '▶️' : '⏸️'}
           </button>
-          <button class="btn btn-small tab-remove-btn" data-tab-id="${tab.tabId}">
-            🗑️ Remove
+          <button class="tab-btn tab-remove-btn" data-tab-id="${tab.tabId}" title="Remove">
+            🗑️
           </button>
         </div>
       </div>
@@ -847,15 +855,17 @@ async function renderLogs(): Promise<void> {
 
     if (logs.length === 0) {
       logsList.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #6c757d;">
-          <p>No activity logs yet</p>
+        <div class="empty-state">
+          <div class="empty-icon">📊</div>
+          <p class="empty-title">No recent activity</p>
+          <p class="empty-subtitle">Activity will appear here when automation starts</p>
         </div>
       `;
       return;
     }
 
-    // Show last 10 logs
-    const recentLogs = logs.slice(-10).reverse();
+    // Show last 15 logs
+    const recentLogs = logs.slice(-15).reverse();
 
     const logsHTML = recentLogs
       .map(log => {
@@ -863,9 +873,12 @@ async function renderLogs(): Promise<void> {
         const levelClass = getLevelClass(log.level);
 
         return `
-        <div class="log-entry ${levelClass}">
-          <div class="log-time">${time}</div>
-          <div class="log-message">${log.message}</div>
+        <div class="log-item">
+          <div class="log-level ${levelClass}"></div>
+          <div class="log-content">
+            <div class="log-message">${truncateText(log.message, 60)}</div>
+            <div class="log-time">${time}</div>
+          </div>
         </div>
       `;
       })
@@ -875,8 +888,10 @@ async function renderLogs(): Promise<void> {
   } catch (error) {
     console.error('Failed to render logs:', error);
     logsList.innerHTML = `
-      <div style="text-align: center; padding: 20px; color: #dc3545;">
-        <p>Failed to load logs</p>
+      <div class="empty-state">
+        <div class="empty-icon">❌</div>
+        <p class="empty-title">Failed to load logs</p>
+        <p class="empty-subtitle">Please try refreshing the extension</p>
       </div>
     `;
   }
@@ -1000,16 +1015,20 @@ function getLastClickText(tab: TabInfo): string {
   return `${hours}h ago`;
 }
 
+/**
+ * Get CSS class for log level
+ */
 function getLevelClass(level: string): string {
   switch (level.toLowerCase()) {
+    case 'success':
+      return 'success';
+    case 'warning':
+      return 'warning';
     case 'error':
-      return 'log-error';
-    case 'warn':
-      return 'log-warn';
+      return 'error';
     case 'info':
-      return 'log-info';
     default:
-      return 'log-debug';
+      return 'info';
   }
 }
 
