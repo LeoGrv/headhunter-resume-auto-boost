@@ -45,6 +45,15 @@ let settingsBtn: HTMLButtonElement;
 let clearLogsBtn: HTMLButtonElement;
 let exportLogsBtn: HTMLButtonElement;
 
+// New settings panel elements
+let settingsPanel: HTMLElement;
+let closeSettingsBtn: HTMLButtonElement;
+let saveSettingsBtn: HTMLButtonElement;
+let customClickIntervalInput: HTMLInputElement;
+let customRefreshIntervalInput: HTMLInputElement;
+let currentClickTimeSpan: HTMLElement;
+let currentRefreshTimeSpan: HTMLElement;
+
 // State
 let currentSettings: AppSettings;
 let managedTabs: TabInfo[] = [];
@@ -128,6 +137,15 @@ async function initializePopup(): Promise<void> {
     clearLogsBtn = document.getElementById('clear-logs') as HTMLButtonElement;
     exportLogsBtn = document.getElementById('export-logs') as HTMLButtonElement;
 
+    // New settings panel elements
+    settingsPanel = document.querySelector('.settings-panel') as HTMLElement;
+    closeSettingsBtn = document.getElementById('close-settings') as HTMLButtonElement;
+    saveSettingsBtn = document.getElementById('save-settings') as HTMLButtonElement;
+    customClickIntervalInput = document.getElementById('custom-click-interval') as HTMLInputElement;
+    customRefreshIntervalInput = document.getElementById('custom-refresh-interval') as HTMLInputElement;
+    currentClickTimeSpan = document.getElementById('current-click-time') as HTMLElement;
+    currentRefreshTimeSpan = document.getElementById('current-refresh-time') as HTMLElement;
+
     console.log('🚀 POPUP INIT - DOM elements found:', {
       statusDot: !!statusDot,
       statusText: !!statusText,
@@ -137,6 +155,13 @@ async function initializePopup(): Promise<void> {
       settingsBtn: !!settingsBtn,
       clearLogsBtn: !!clearLogsBtn,
       exportLogsBtn: !!exportLogsBtn,
+      settingsPanel: !!settingsPanel,
+      closeSettingsBtn: !!closeSettingsBtn,
+      saveSettingsBtn: !!saveSettingsBtn,
+      customClickIntervalInput: !!customClickIntervalInput,
+      customRefreshIntervalInput: !!customRefreshIntervalInput,
+      currentClickTimeSpan: !!currentClickTimeSpan,
+      currentRefreshTimeSpan: !!currentRefreshTimeSpan,
     });
 
     if (
@@ -147,7 +172,14 @@ async function initializePopup(): Promise<void> {
       !globalPauseBtn ||
       !settingsBtn ||
       !clearLogsBtn ||
-      !exportLogsBtn
+      !exportLogsBtn ||
+      !settingsPanel ||
+      !closeSettingsBtn ||
+      !saveSettingsBtn ||
+      !customClickIntervalInput ||
+      !customRefreshIntervalInput ||
+      !currentClickTimeSpan ||
+      !currentRefreshTimeSpan
     ) {
       console.error('🚀 POPUP INIT - Missing DOM elements!');
       throw new Error('Required DOM elements not found');
@@ -332,10 +364,17 @@ function setupEventListeners(): void {
   // Global pause button
   globalPauseBtn.addEventListener('click', handleGlobalPauseToggle);
 
-  // Settings button
-  settingsBtn.addEventListener('click', async () => {
-    await handleSettingsClick();
+  // Settings button - now opens the settings panel
+  settingsBtn.addEventListener('click', () => {
+    showSettingsPanel();
   });
+
+  // Settings panel controls
+  closeSettingsBtn.addEventListener('click', hideSettingsPanel);
+  saveSettingsBtn.addEventListener('click', handleSaveSettings);
+
+  // Time selector buttons
+  setupTimeSelectors();
 
   // Clear logs button
   clearLogsBtn.addEventListener('click', handleClearLogs);
@@ -392,136 +431,6 @@ async function handleGlobalPauseToggle(): Promise<void> {
     isGlobalPaused = !isGlobalPaused;
     updateGlobalPauseButton();
     updateStatusIndicator();
-  }
-}
-
-/**
- * Debug function to check Chrome Storage directly
- */
-async function debugChromeStorage(): Promise<void> {
-  try {
-    console.log('🔍 DIRECT CHROME STORAGE CHECK:');
-    const result = await chrome.storage.sync.get();
-    console.log('🔍 ALL Chrome Storage data:', result);
-
-    const settingsResult = await chrome.storage.sync.get('extension_settings');
-    console.log('🔍 Settings from Chrome Storage:', settingsResult);
-  } catch (error) {
-    console.error('🔍 Failed to check Chrome Storage:', error);
-  }
-}
-
-/**
- * Simple test function to save data directly to Chrome Storage
- */
-async function testDirectSave(interval: number): Promise<void> {
-  try {
-    console.log('🧪 DIRECT SAVE TEST - Saving interval:', interval);
-
-    // Save directly without any conversions
-    await chrome.storage.sync.set({
-      test_interval: interval,
-      extension_settings: {
-        clickInterval: interval,
-        maxTabs: 2,
-        globalPaused: false,
-        loggingEnabled: true,
-        refreshInterval: 10,
-      },
-    });
-
-    console.log('🧪 DIRECT SAVE TEST - Save completed');
-
-    // Verify immediately
-    const verification = await chrome.storage.sync.get([
-      'test_interval',
-      'extension_settings',
-    ]);
-    console.log('🧪 DIRECT SAVE TEST - Verification:', verification);
-  } catch (error) {
-    console.error('🧪 DIRECT SAVE TEST - Failed:', error);
-  }
-}
-
-/**
- * Handle settings button click
- */
-async function handleSettingsClick(): Promise<void> {
-  console.log(
-    '🔧 SETTINGS CLICK - Current settings before reload:',
-    currentSettings
-  );
-
-  // Debug Chrome Storage directly
-  await debugChromeStorage();
-
-  // Reload settings to ensure we have the latest data
-  await loadSettings();
-  console.log(
-    '🔧 SETTINGS CLICK - Current settings after reload:',
-    currentSettings
-  );
-
-  // Show settings dialog with multiple options
-  const settingsDialog = `
-Current Settings:
-• Click interval: ${currentSettings.clickInterval} minutes
-• Page refresh interval: ${currentSettings.refreshInterval} minutes
-
-What would you like to change?
-1. Click interval (1-600 minutes)
-2. Page refresh interval (1-600 minutes)
-3. Cancel
-
-Enter 1, 2, or 3:`;
-
-  const choice = prompt(settingsDialog, '1');
-  console.log('🔧 User choice:', choice);
-
-  if (choice === '1') {
-    // Change click interval
-    const newInterval = prompt(
-      `Current click interval: ${currentSettings.clickInterval} minutes\nEnter new interval (1-600 minutes):`,
-      currentSettings.clickInterval.toString()
-    );
-
-    console.log('🔧 User entered new interval:', newInterval);
-
-    if (newInterval) {
-      const interval = parseInt(newInterval, 10);
-      console.log('🔧 Parsed interval:', interval);
-
-      if (interval >= 1 && interval <= 600) {
-        console.log('🔧 Calling updateSettings with clickInterval:', interval);
-
-        // Test direct save first
-        await testDirectSave(interval);
-
-        await updateSettings({ clickInterval: interval });
-        console.log('🔧 updateSettings completed, settings should be updated');
-
-        // Debug Chrome Storage after saving
-        console.log('🔧 Checking Chrome Storage after save:');
-        await debugChromeStorage();
-      } else {
-        alert('Interval must be between 1 and 600 minutes');
-      }
-    }
-  } else if (choice === '2') {
-    // Change refresh interval
-    const newRefreshInterval = prompt(
-      `Current page refresh interval: ${currentSettings.refreshInterval} minutes\nEnter new interval (1-600 minutes):`,
-      currentSettings.refreshInterval.toString()
-    );
-
-    if (newRefreshInterval) {
-      const interval = parseInt(newRefreshInterval, 10);
-      if (interval >= 1 && interval <= 600) {
-        await updateSettings({ refreshInterval: interval });
-      } else {
-        alert('Refresh interval must be between 1 and 600 minutes');
-      }
-    }
   }
 }
 
@@ -676,8 +585,8 @@ function updateGlobalPauseButton(): void {
     globalPauseBtn.innerHTML = `
       <div class="btn-icon">▶️</div>
       <div class="btn-content">
-        <span class="btn-title">Resume All</span>
-        <span class="btn-subtitle">Start automation</span>
+        <span class="btn-title">Запустить</span>
+        <span class="btn-subtitle">Возобновить автоматизацию</span>
       </div>
     `;
     globalPauseBtn.className = 'action-btn secondary';
@@ -685,8 +594,8 @@ function updateGlobalPauseButton(): void {
     globalPauseBtn.innerHTML = `
       <div class="btn-icon">⏸</div>
       <div class="btn-content">
-        <span class="btn-title">Pause All</span>
-        <span class="btn-subtitle">Stop all automation</span>
+        <span class="btn-title">Пауза</span>
+        <span class="btn-subtitle">Остановить автоматизацию</span>
       </div>
     `;
     globalPauseBtn.className = 'action-btn primary';
@@ -706,8 +615,8 @@ function renderManagedTabs(): void {
     tabsList.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">📄</div>
-        <p class="empty-title">No active tabs</p>
-        <p class="empty-subtitle">Open a HeadHunter resume page to start</p>
+        <p class="empty-title">Резюме не найдены</p>
+        <p class="empty-subtitle">Откройте страницу резюме на HeadHunter</p>
       </div>
     `;
     return;
@@ -727,14 +636,14 @@ function renderManagedTabs(): void {
             ${truncateText(tab.title || tab.url, 35)}
           </div>
           <div class="tab-status ${stateClass}">
-            ${stateText} • Next: ${timeRemaining} • Last: ${lastClick}
+            ${stateText} • Следующее: ${timeRemaining} • Последнее: ${lastClick}
           </div>
         </div>
         <div class="tab-actions">
-          <button class="tab-btn tab-pause-btn" data-tab-id="${tab.tabId}" title="${tab.state === TabState.PAUSED ? 'Resume' : 'Pause'}">
+          <button class="tab-btn tab-pause-btn" data-tab-id="${tab.tabId}" title="${tab.state === TabState.PAUSED ? 'Возобновить' : 'Приостановить'}">
             ${tab.state === TabState.PAUSED ? '▶️' : '⏸️'}
           </button>
-          <button class="tab-btn tab-remove-btn" data-tab-id="${tab.tabId}" title="Remove">
+          <button class="tab-btn tab-remove-btn" data-tab-id="${tab.tabId}" title="Удалить">
             🗑️
           </button>
         </div>
@@ -857,8 +766,8 @@ async function renderLogs(): Promise<void> {
       logsList.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">📊</div>
-          <p class="empty-title">No recent activity</p>
-          <p class="empty-subtitle">Activity will appear here when automation starts</p>
+          <p class="empty-title">Нет активности</p>
+          <p class="empty-subtitle">Активность появится здесь при запуске автоматизации</p>
         </div>
       `;
       return;
@@ -869,14 +778,16 @@ async function renderLogs(): Promise<void> {
 
     const logsHTML = recentLogs
       .map(log => {
-        const time = new Date(log.timestamp).toLocaleTimeString();
+        const time = new Date(log.timestamp).toLocaleTimeString('ru-RU');
         const levelClass = getLevelClass(log.level);
 
         return `
         <div class="log-item">
-          <div class="log-level ${levelClass}"></div>
+          <div class="log-level ${levelClass}">
+            ${getLevelIcon(log.level)}
+          </div>
           <div class="log-content">
-            <div class="log-message">${truncateText(log.message, 60)}</div>
+            <div class="log-message">${log.message}</div>
             <div class="log-time">${time}</div>
           </div>
         </div>
@@ -890,8 +801,8 @@ async function renderLogs(): Promise<void> {
     logsList.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">❌</div>
-        <p class="empty-title">Failed to load logs</p>
-        <p class="empty-subtitle">Please try refreshing the extension</p>
+        <p class="empty-title">Ошибка загрузки логов</p>
+        <p class="empty-subtitle">Попробуйте обновить расширение</p>
       </div>
     `;
   }
@@ -915,22 +826,25 @@ function getStateClass(state: TabState): string {
   }
 }
 
+/**
+ * Get state text for display
+ */
 function getStateText(state: TabState): string {
   switch (state) {
     case TabState.ACTIVE:
-      return 'Active';
+      return 'Активен';
     case TabState.PAUSED:
-      return 'Paused';
+      return 'Пауза';
     case TabState.COOLDOWN:
-      return 'Cooldown';
+      return 'Ожидание';
     case TabState.ERROR:
-      return 'Error';
+      return 'Ошибка';
     case TabState.DISCOVERED:
-      return 'Discovered';
+      return 'Найден';
     case TabState.REMOVED:
-      return 'Removed';
+      return 'Удален';
     default:
-      return 'Unknown';
+      return 'Неизвестно';
   }
 }
 
@@ -1032,6 +946,20 @@ function getLevelClass(level: string): string {
   }
 }
 
+function getLevelIcon(level: string): string {
+  switch (level.toLowerCase()) {
+    case 'success':
+      return '✅';
+    case 'warning':
+      return '⚠️';
+    case 'error':
+      return '❌';
+    case 'info':
+    default:
+      return 'ℹ️';
+  }
+}
+
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength - 3) + '...';
@@ -1052,3 +980,193 @@ setInterval(() => {
   });
   renderLogs();
 }, 5000); // Refresh every 5 seconds
+
+/**
+ * Show settings panel
+ */
+function showSettingsPanel(): void {
+  settingsPanel.style.display = 'block';
+  updateCurrentSettingsDisplay();
+  updateTimeSelectors();
+}
+
+/**
+ * Hide settings panel
+ */
+function hideSettingsPanel(): void {
+  settingsPanel.style.display = 'none';
+}
+
+/**
+ * Setup time selector buttons
+ */
+function setupTimeSelectors(): void {
+  // Click interval time buttons
+  const clickTimeBtns = document.querySelectorAll('.time-btn[data-minutes]');
+  clickTimeBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.target as HTMLButtonElement;
+      const minutes = parseInt(target.dataset.minutes || '0', 10);
+      selectClickInterval(minutes);
+    });
+  });
+
+  // Refresh interval time buttons
+  const refreshTimeBtns = document.querySelectorAll('.time-btn[data-refresh]');
+  refreshTimeBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.target as HTMLButtonElement;
+      const minutes = parseInt(target.dataset.refresh || '0', 10);
+      selectRefreshInterval(minutes);
+    });
+  });
+
+  // Custom input handlers
+  customClickIntervalInput.addEventListener('input', () => {
+    clearActiveTimeButtons('click');
+  });
+
+  customRefreshIntervalInput.addEventListener('input', () => {
+    clearActiveTimeButtons('refresh');
+  });
+}
+
+/**
+ * Select click interval
+ */
+function selectClickInterval(minutes: number): void {
+  clearActiveTimeButtons('click');
+  const btn = document.querySelector(`[data-minutes="${minutes}"]`) as HTMLButtonElement;
+  if (btn) {
+    btn.classList.add('active');
+  }
+  customClickIntervalInput.value = '';
+}
+
+/**
+ * Select refresh interval
+ */
+function selectRefreshInterval(minutes: number): void {
+  clearActiveTimeButtons('refresh');
+  const btn = document.querySelector(`[data-refresh="${minutes}"]`) as HTMLButtonElement;
+  if (btn) {
+    btn.classList.add('active');
+  }
+  customRefreshIntervalInput.value = '';
+}
+
+/**
+ * Clear active time buttons
+ */
+function clearActiveTimeButtons(type: 'click' | 'refresh'): void {
+  const selector = type === 'click' ? '[data-minutes]' : '[data-refresh]';
+  const buttons = document.querySelectorAll(`.time-btn${selector}`);
+  buttons.forEach(btn => btn.classList.remove('active'));
+}
+
+/**
+ * Update time selectors based on current settings
+ */
+function updateTimeSelectors(): void {
+  // Update click interval selectors
+  clearActiveTimeButtons('click');
+  const clickBtn = document.querySelector(`[data-minutes="${currentSettings.clickInterval}"]`) as HTMLButtonElement;
+  if (clickBtn) {
+    clickBtn.classList.add('active');
+  } else {
+    customClickIntervalInput.value = currentSettings.clickInterval.toString();
+  }
+
+  // Update refresh interval selectors
+  clearActiveTimeButtons('refresh');
+  const refreshBtn = document.querySelector(`[data-refresh="${currentSettings.refreshInterval}"]`) as HTMLButtonElement;
+  if (refreshBtn) {
+    refreshBtn.classList.add('active');
+  } else {
+    customRefreshIntervalInput.value = currentSettings.refreshInterval.toString();
+  }
+}
+
+/**
+ * Update current settings display
+ */
+function updateCurrentSettingsDisplay(): void {
+  currentClickTimeSpan.textContent = formatTime(currentSettings.clickInterval);
+  currentRefreshTimeSpan.textContent = formatTime(currentSettings.refreshInterval);
+}
+
+/**
+ * Format time for display
+ */
+function formatTime(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes} мин`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) {
+    return `${hours} час${hours > 1 ? 'а' : ''}`;
+  }
+  return `${hours} час${hours > 1 ? 'а' : ''} ${remainingMinutes} мин`;
+}
+
+/**
+ * Handle save settings
+ */
+async function handleSaveSettings(): Promise<void> {
+  try {
+    let newClickInterval = currentSettings.clickInterval;
+    let newRefreshInterval = currentSettings.refreshInterval;
+
+    // Get click interval from active button or custom input
+    const activeClickBtn = document.querySelector('.time-btn[data-minutes].active') as HTMLButtonElement;
+    if (activeClickBtn) {
+      newClickInterval = parseInt(activeClickBtn.dataset.minutes || '0', 10);
+    } else if (customClickIntervalInput.value) {
+      newClickInterval = parseInt(customClickIntervalInput.value, 10);
+    }
+
+    // Get refresh interval from active button or custom input
+    const activeRefreshBtn = document.querySelector('.time-btn[data-refresh].active') as HTMLButtonElement;
+    if (activeRefreshBtn) {
+      newRefreshInterval = parseInt(activeRefreshBtn.dataset.refresh || '0', 10);
+    } else if (customRefreshIntervalInput.value) {
+      newRefreshInterval = parseInt(customRefreshIntervalInput.value, 10);
+    }
+
+    // Validate intervals
+    if (newClickInterval < 1 || newClickInterval > 600) {
+      alert('Интервал поднятия должен быть от 1 до 600 минут');
+      return;
+    }
+
+    if (newRefreshInterval < 1 || newRefreshInterval > 600) {
+      alert('Интервал обновления должен быть от 1 до 600 минут');
+      return;
+    }
+
+    // Update settings
+    await updateSettings({
+      clickInterval: newClickInterval,
+      refreshInterval: newRefreshInterval
+    });
+
+    // Update display
+    updateCurrentSettingsDisplay();
+
+    // Show success feedback
+    const originalText = saveSettingsBtn.querySelector('.btn-title')?.textContent;
+    const titleElement = saveSettingsBtn.querySelector('.btn-title') as HTMLElement;
+    if (titleElement) {
+      titleElement.textContent = 'Сохранено!';
+      setTimeout(() => {
+        titleElement.textContent = originalText || 'Сохранить';
+      }, 2000);
+    }
+
+    console.log('Settings saved successfully:', { newClickInterval, newRefreshInterval });
+  } catch (error) {
+    console.error('Failed to save settings:', error);
+    alert('Ошибка при сохранении настроек');
+  }
+}

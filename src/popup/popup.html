@@ -31,8 +31,8 @@
                         <div class="brand-text">
                             <h1 class="app-title">HH Resume Boost</h1>
                             <div class="version-badge">
-                                <span class="version-info">v1.2.46</span>
-                                <span class="version-status">ULTIMATE STEALTH</span>
+                                <span class="version-info">v1.2.49</span>
+                                <span class="version-status">MODERN UI</span>
                             </div>
                         </div>
                     </div>
@@ -48,38 +48,8 @@
 
             <!-- Main Dashboard -->
             <main class="dashboard">
-                <!-- Quick Actions Card -->
-                <div class="card quick-actions-card">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M13 3L4 14H11L10 21L19 10H12L13 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Quick Actions
-                        </h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="action-buttons">
-                            <button id="global-pause" class="action-btn primary">
-                                <div class="btn-icon">⏸</div>
-                                <div class="btn-content">
-                                    <span class="btn-title">Pause All</span>
-                                    <span class="btn-subtitle">Stop all automation</span>
-                                </div>
-                            </button>
-                            <button id="settings" class="action-btn secondary">
-                                <div class="btn-icon">⚙️</div>
-                                <div class="btn-content">
-                                    <span class="btn-title">Settings</span>
-                                    <span class="btn-subtitle">Configure options</span>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resume Tabs Card -->
-                <div class="card tabs-card">
+                <!-- Resume Tabs Card - MOVED TO TOP -->
+                <div class="card tabs-card priority-card">
                     <div class="card-header">
                         <h2 class="card-title">
                             <svg class="card-icon" viewBox="0 0 24 24" fill="none">
@@ -89,7 +59,7 @@
                                 <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Active Resume Tabs
+                            Найденные резюме
                         </h2>
                         <div class="card-badge">
                             <span class="badge-count">0</span>
@@ -99,14 +69,125 @@
                         <div class="tabs-list">
                             <div class="empty-state">
                                 <div class="empty-icon">📄</div>
-                                <p class="empty-title">No active tabs</p>
-                                <p class="empty-subtitle">Open a HeadHunter resume page to start</p>
+                                <p class="empty-title">Резюме не найдены</p>
+                                <p class="empty-subtitle">Откройте страницу резюме на HeadHunter</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Activity Log Card -->
+                <!-- Quick Actions Card -->
+                <div class="card quick-actions-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <path d="M13 3L4 14H11L10 21L19 10H12L13 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Управление
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="action-buttons">
+                            <button id="global-pause" class="action-btn primary">
+                                <div class="btn-icon">⏸</div>
+                                <div class="btn-content">
+                                    <span class="btn-title">Пауза</span>
+                                    <span class="btn-subtitle">Остановить автоматизацию</span>
+                                </div>
+                            </button>
+                            <button id="settings" class="action-btn secondary">
+                                <div class="btn-icon">⚙️</div>
+                                <div class="btn-content">
+                                    <span class="btn-title">Настройки</span>
+                                    <span class="btn-subtitle">Время обновлений</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Panel (Initially Hidden) -->
+                <div id="settings-panel" class="card settings-panel" style="display: none;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            Настройки времени
+                        </h2>
+                        <button id="close-settings" class="icon-btn">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label">
+                                    <svg class="setting-icon" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                        <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    Интервал поднятия резюме
+                                </label>
+                                <div class="time-selector">
+                                    <button class="time-btn" data-minutes="5">5 мин</button>
+                                    <button class="time-btn" data-minutes="15">15 мин</button>
+                                    <button class="time-btn active" data-minutes="30">30 мин</button>
+                                    <button class="time-btn" data-minutes="60">1 час</button>
+                                    <button class="time-btn" data-minutes="120">2 часа</button>
+                                </div>
+                                <div class="custom-time">
+                                    <input type="number" id="custom-click-interval" min="1" max="600" placeholder="Свое время">
+                                    <span class="time-unit">минут</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">
+                                    <svg class="setting-icon" viewBox="0 0 24 24" fill="none">
+                                        <path d="M1 4v16l18-8L1 4z" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    Обновление страницы
+                                </label>
+                                <div class="time-selector">
+                                    <button class="time-btn" data-refresh="10">10 мин</button>
+                                    <button class="time-btn active" data-refresh="15">15 мин</button>
+                                    <button class="time-btn" data-refresh="30">30 мин</button>
+                                    <button class="time-btn" data-refresh="60">1 час</button>
+                                </div>
+                                <div class="custom-time">
+                                    <input type="number" id="custom-refresh-interval" min="1" max="600" placeholder="Свое время">
+                                    <span class="time-unit">минут</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <div class="current-settings">
+                                    <h4>Текущие настройки:</h4>
+                                    <div class="current-values">
+                                        <span class="current-click">Поднятие: <strong id="current-click-time">15 мин</strong></span>
+                                        <span class="current-refresh">Обновление: <strong id="current-refresh-time">15 мин</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-actions">
+                            <button id="save-settings" class="action-btn primary">
+                                <div class="btn-icon">💾</div>
+                                <div class="btn-content">
+                                    <span class="btn-title">Сохранить</span>
+                                    <span class="btn-subtitle">Применить настройки</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Log Card - MOVED TO BOTTOM -->
                 <div class="card logs-card">
                     <div class="card-header">
                         <h2 class="card-title">
@@ -116,16 +197,16 @@
                                 <path d="M9 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M9 11H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Recent Activity
+                            Журнал активности
                         </h2>
                         <div class="card-actions">
-                            <button id="clear-logs" class="icon-btn" title="Clear logs">
+                            <button id="clear-logs" class="icon-btn" title="Очистить журнал">
                                 <svg viewBox="0 0 24 24" fill="none">
                                     <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
-                            <button id="export-logs" class="icon-btn" title="Export logs">
+                            <button id="export-logs" class="icon-btn" title="Экспорт журнала">
                                 <svg viewBox="0 0 24 24" fill="none">
                                     <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -138,8 +219,8 @@
                         <div class="logs-list">
                             <div class="empty-state">
                                 <div class="empty-icon">📊</div>
-                                <p class="empty-title">No recent activity</p>
-                                <p class="empty-subtitle">Activity will appear here when automation starts</p>
+                                <p class="empty-title">Нет активности</p>
+                                <p class="empty-subtitle">Активность появится при запуске автоматизации</p>
                             </div>
                         </div>
                     </div>
