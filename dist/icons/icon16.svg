@@ -1,34 +1,56 @@
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad16" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FF4444;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0066FF;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
     </linearGradient>
     <linearGradient id="starGrad16" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFFF00;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FF8800;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#ffecd2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fcb69f;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="arrowGrad16" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow16" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Background circle with high contrast -->
-  <circle cx="8" cy="8" r="7" fill="url(#bgGrad16)" stroke="#000000" stroke-width="1"/>
+  <!-- Full background with beautiful gradient -->
+  <rect x="0" y="0" width="16" height="16" fill="url(#bgGrad16)" rx="2"/>
   
-  <!-- White inner circle for contrast -->
-  <circle cx="8" cy="8" r="4" fill="none" stroke="white" stroke-width="1" opacity="0.8" />
-  
-  <!-- Large central star -->
+  <!-- Large central star that fills most of the space -->
   <g transform="translate(8, 8)">
-    <path d="M0,-5.333333333333333 L1.6,-1.6 L5.333333333333333,0 L1.6,1.6 L0,5.333333333333333 L-1.6,1.6 L-5.333333333333333,0 L-1.6,-1.6 Z" 
-          fill="url(#starGrad16)" stroke="#000000" stroke-width="1"/>
+    <path d="M0,-5.6 L1.92,-1.92 L5.6,0 L1.92,1.92 L0,5.6 L-1.92,1.92 L-5.6,0 L-1.92,-1.92 Z" 
+          fill="url(#starGrad16)" filter="url(#glow16)"/>
   </g>
   
-  <!-- Bold arrow pointing up -->
+  <!-- Large upward arrow in the center -->
   <g transform="translate(8, 8)">
-    <path d="M0,-3.2 L2,-1.3333333333333333 L1,-1.3333333333333333 L1,2.6666666666666665 L-1,2.6666666666666665 L-1,-1.3333333333333333 L-2,-1.3333333333333333 Z" 
-          fill="white" stroke="#000000" stroke-width="0.5"/>
+    <path d="M0,-3.2 L2.4,-0.8 L1.28,-0.8 L1.28,2.4 L-1.28,2.4 L-1.28,-0.8 L-2.4,-0.8 Z" 
+          fill="url(#arrowGrad16)" filter="url(#glow16)"/>
   </g>
   
-  <!-- High contrast accent dots -->
-  <circle cx="14" cy="2" r="0.8" fill="white" stroke="#000000" stroke-width="0.5"/>
-  <circle cx="2" cy="14" r="0.8" fill="white" stroke="#000000" stroke-width="0.5"/>
+  <!-- Corner accent elements -->
+  <circle cx="13.6" cy="2.4" r="1.28" fill="white" opacity="0.8" filter="url(#glow16)"/>
+  <circle cx="2.4" cy="13.6" r="1.28" fill="white" opacity="0.8" filter="url(#glow16)"/>
+  
+  <!-- Small decorative stars in corners -->
+  <g transform="translate(3.2, 3.2)">
+    <path d="M0,-0.96 L0.32,-0.32 L0.96,0 L0.32,0.32 L0,0.96 L-0.32,0.32 L-0.96,0 L-0.32,-0.32 Z" 
+          fill="white" opacity="0.6"/>
+  </g>
+  <g transform="translate(12.8, 12.8)">
+    <path d="M0,-0.96 L0.32,-0.32 L0.96,0 L0.32,0.32 L0,0.96 L-0.32,0.32 L-0.96,0 L-0.32,-0.32 Z" 
+          fill="white" opacity="0.6"/>
+  </g>
+  
+  <!-- Subtle border for definition -->
+  <rect x="1" y="1" width="14" height="14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" rx="1"/>
 </svg>

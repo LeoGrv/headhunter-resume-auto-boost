@@ -9,43 +9,65 @@ if (!fs.existsSync(iconsDir)) {
     fs.mkdirSync(iconsDir, { recursive: true });
 }
 
-console.log('🎨 Creating simple and highly visible icons for Chrome extension...');
+console.log('🎨 Creating beautiful full-size icons for Chrome extension...');
 
-// Create simple, high-contrast icons that will definitely show up
+// Create beautiful icons that fill the entire space
 function createIcon(size) {
     const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad${size}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FF4444;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0066FF;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
     </linearGradient>
     <linearGradient id="starGrad${size}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFFF00;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FF8800;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#ffecd2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fcb69f;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="arrowGrad${size}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow${size}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Background circle with high contrast -->
-  <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 1}" fill="url(#bgGrad${size})" stroke="#000000" stroke-width="1"/>
+  <!-- Full background with beautiful gradient -->
+  <rect x="0" y="0" width="${size}" height="${size}" fill="url(#bgGrad${size})" rx="${size/8}"/>
   
-  <!-- White inner circle for contrast -->
-  <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 4}" fill="none" stroke="white" stroke-width="1" opacity="0.8" />
-  
-  <!-- Large central star -->
+  <!-- Large central star that fills most of the space -->
   <g transform="translate(${size/2}, ${size/2})">
-    <path d="M0,${-size/3} L${size/10},${-size/10} L${size/3},0 L${size/10},${size/10} L0,${size/3} L${-size/10},${size/10} L${-size/3},0 L${-size/10},${-size/10} Z" 
-          fill="url(#starGrad${size})" stroke="#000000" stroke-width="1"/>
+    <path d="M0,${-size*0.35} L${size*0.12},${-size*0.12} L${size*0.35},0 L${size*0.12},${size*0.12} L0,${size*0.35} L${-size*0.12},${size*0.12} L${-size*0.35},0 L${-size*0.12},${-size*0.12} Z" 
+          fill="url(#starGrad${size})" filter="url(#glow${size})"/>
   </g>
   
-  <!-- Bold arrow pointing up -->
+  <!-- Large upward arrow in the center -->
   <g transform="translate(${size/2}, ${size/2})">
-    <path d="M0,${-size/5} L${size/8},${-size/12} L${size/16},${-size/12} L${size/16},${size/6} L${-size/16},${size/6} L${-size/16},${-size/12} L${-size/8},${-size/12} Z" 
-          fill="white" stroke="#000000" stroke-width="0.5"/>
+    <path d="M0,${-size*0.2} L${size*0.15},${-size*0.05} L${size*0.08},${-size*0.05} L${size*0.08},${size*0.15} L${-size*0.08},${size*0.15} L${-size*0.08},${-size*0.05} L${-size*0.15},${-size*0.05} Z" 
+          fill="url(#arrowGrad${size})" filter="url(#glow${size})"/>
   </g>
   
-  <!-- High contrast accent dots -->
-  <circle cx="${size - size/8}" cy="${size/8}" r="${size/20}" fill="white" stroke="#000000" stroke-width="0.5"/>
-  <circle cx="${size/8}" cy="${size - size/8}" r="${size/20}" fill="white" stroke="#000000" stroke-width="0.5"/>
+  <!-- Corner accent elements -->
+  <circle cx="${size*0.85}" cy="${size*0.15}" r="${size*0.08}" fill="white" opacity="0.8" filter="url(#glow${size})"/>
+  <circle cx="${size*0.15}" cy="${size*0.85}" r="${size*0.08}" fill="white" opacity="0.8" filter="url(#glow${size})"/>
+  
+  <!-- Small decorative stars in corners -->
+  <g transform="translate(${size*0.2}, ${size*0.2})">
+    <path d="M0,${-size*0.06} L${size*0.02},${-size*0.02} L${size*0.06},0 L${size*0.02},${size*0.02} L0,${size*0.06} L${-size*0.02},${size*0.02} L${-size*0.06},0 L${-size*0.02},${-size*0.02} Z" 
+          fill="white" opacity="0.6"/>
+  </g>
+  <g transform="translate(${size*0.8}, ${size*0.8})">
+    <path d="M0,${-size*0.06} L${size*0.02},${-size*0.02} L${size*0.06},0 L${size*0.02},${size*0.02} L0,${size*0.06} L${-size*0.02},${size*0.02} L${-size*0.06},0 L${-size*0.02},${-size*0.02} Z" 
+          fill="white" opacity="0.6"/>
+  </g>
+  
+  <!-- Subtle border for definition -->
+  <rect x="1" y="1" width="${size-2}" height="${size-2}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" rx="${size/8-1}"/>
 </svg>`;
 
     return svg;
@@ -63,37 +85,41 @@ sizes.forEach(size => {
     console.log(`✅ Created ${filename} (${size}x${size})`);
 });
 
-console.log('\n🎉 Simple high-contrast SVG icons created successfully!');
+console.log('\n🎉 Beautiful full-size icons created successfully!');
 
 // Create README for icons
-const readme = `# Chrome Extension Icons - High Contrast Version
+const readme = `# Chrome Extension Icons - Full Size Beautiful Version
 
 ## Design Features
-- **High contrast gradient**: Red to Blue for maximum visibility
-- **Bold yellow/orange star**: Central boost symbol
-- **White arrow with black outline**: Clear upward pointing symbol
-- **Simple design**: No complex filters that might not render
-- **Black outlines**: Ensure visibility on any background
+- **Full-size design**: Icons fill the entire space with no wasted area
+- **Beautiful gradient background**: Purple to pink gradient for modern look
+- **Large central star**: Prominent boost symbol with warm gradient
+- **Bold arrow**: Clear upward pointing arrow with blue gradient
+- **Corner accents**: White circles and small stars for visual interest
+- **Subtle glow effects**: Soft lighting for premium appearance
+- **Rounded corners**: Modern app-like appearance
 
 ## Color Palette
-- Background: #FF4444 → #0066FF (Red to Blue)
-- Star: #FFFF00 → #FF8800 (Yellow to Orange)
-- Accents: White with black outlines
+- Background: #667eea → #764ba2 → #f093fb (Purple to Pink)
+- Star: #ffecd2 → #fcb69f (Warm Orange)
+- Arrow: #4facfe → #00f2fe (Blue Cyan)
+- Accents: White with various opacities
 
 ## Sizes Generated
-- 16x16px (toolbar)
+- 16x16px (toolbar) - Simplified for small size
 - 32x32px (extension management)
 - 48x48px (extension details)
 - 128x128px (Chrome Web Store)
 
-These icons are designed for maximum visibility and compatibility with Chrome extension system.
+These icons are designed to be highly visible, fill the entire icon space, and look beautiful in Chrome.
 `;
 
 fs.writeFileSync(path.join(iconsDir, 'README.md'), readme);
 console.log('📚 Created README.md with icon documentation');
 
-console.log('\n📝 These simplified icons should be highly visible in Chrome!');
-console.log('If icons still don\'t show, try:');
-console.log('1. Reload the extension in chrome://extensions/');
-console.log('2. Clear Chrome cache');
-console.log('3. Restart Chrome browser'); 
+console.log('\n🎨 These beautiful full-size icons should look amazing in Chrome!');
+console.log('Key improvements:');
+console.log('- Icons now fill the entire space');
+console.log('- Larger, more prominent elements');
+console.log('- Beautiful gradients and glow effects');
+console.log('- Modern rounded rectangle design'); 
