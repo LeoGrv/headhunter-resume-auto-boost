@@ -247,1429 +247,253 @@ async function clickBoostButton(): Promise<boolean> {
     }
 
     // 🔍 Детекция активности вкладки
-    const isTabActive = !document.hidden && document.visibilityState === 'visible';
+    // const isTabActive = !document.hidden && document.visibilityState === 'visible';
 
-    // 🤖 ГИБРИДНАЯ ИМИТАЦИЯ ЧЕЛОВЕЧЕСКОГО ПОВЕДЕНИЯ
-    
-    // Логируем начало имитации
-    logger.warning('ContentScript', 'Human simulation started', {
+    // Логируем начало попытки клика
+    logger.warning('ContentScript', 'Boost request received - starting click attempt', {
       url: window.location.href,
-      tabActive: isTabActive,
-      simulationType: isTabActive ? 'full' : 'lightweight',
-      buttonText: button.textContent?.trim()
+      timestamp: new Date().toISOString()
     }).catch(() => {});
-    
-    // 🎭 ПРОДВИНУТАЯ ИМИТАЦИЯ ЧЕЛОВЕКА для обхода защиты
-    
-    // 1. Имитируем чтение страницы перед действием
-    const pageReadingTime = Math.random() * 1500 + 800; // 0.8-2.3 секунды чтения
-    await new Promise(resolve => setTimeout(resolve, pageReadingTime));
-    
-    // 2. Имитируем движение мыши по странице (только для активных вкладок)
-    if (isTabActive) {
-      for (let i = 0; i < 2; i++) {
-        const randomX = Math.random() * window.innerWidth;
-        const randomY = Math.random() * window.innerHeight;
-        
-        const mouseMoveEvent = new MouseEvent('mousemove', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          clientX: randomX,
-          clientY: randomY
-        });
-        document.dispatchEvent(mouseMoveEvent);
-        
-        await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 200));
-      }
-    }
-    
-    // 3. Прокрутка к кнопке (работает везде)
-    try {
-      const scrollBehavior = isTabActive ? 'smooth' : 'auto';
-      button.scrollIntoView({ behavior: scrollBehavior, block: 'center' });
-      
-      const scrollWait = isTabActive ? 400 : 100;
-      await new Promise(resolve => setTimeout(resolve, scrollWait));
-    } catch (e) {
-      console.warn('Scroll failed:', e);
-    }
-    
-    // 4. Дополнительная пауза после скролла
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
-    
-    // 1. Универсальная задержка "размышления" (работает везде)
-    const thinkingDelay = isTabActive ? 
-      (Math.random() * 1000 + 500) :  // 0.5-1.5 сек для активной
-      (Math.random() * 300 + 200);    // 0.2-0.5 сек для неактивной
-    
-    await new Promise(resolve => setTimeout(resolve, thinkingDelay));
 
-    // 2. Прокрутка к кнопке (работает везде)
+    // Сохраняем исходное состояние кнопки для сравнения
+    const initialButtonText = button.textContent?.trim();
+    const initialButtonClasses = button.className;
+    const initialButtonDisabled = button.hasAttribute('disabled');
+
+    // 🎯 ПРОСТОЙ И НАДЕЖНЫЙ ПОДХОД
+    
+    // 1. Прокрутка к кнопке
     try {
-      const scrollBehavior = isTabActive ? 'smooth' : 'auto';
-      button.scrollIntoView({ behavior: scrollBehavior, block: 'center' });
-      
-      const scrollWait = isTabActive ? 500 : 100;
-      await new Promise(resolve => setTimeout(resolve, scrollWait));
+      button.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await new Promise(resolve => setTimeout(resolve, 300));
     } catch (e) {
       console.warn('Scroll failed:', e);
     }
 
-    // 3. Имитация визуального взаимодействия
-    if (isTabActive) {
-      // 🖱️ ПОЛНАЯ ИМИТАЦИЯ для активной вкладки
+    // 2. Фокус на кнопку
+    try {
+      button.focus();
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (e) {
+      console.warn('Focus failed:', e);
+    }
+
+    let clickSuccess = false;
+    const clickResults: string[] = [];
+
+    // 🚀 МЕТОД 1: Прямой клик (самый надежный)
+    try {
+      button.click();
+      clickResults.push('Direct Click: EXECUTED');
+      clickSuccess = true;
       
+      logger.success('ContentScript', 'Direct click executed', {
+        url: window.location.href,
+        buttonText: initialButtonText
+      }).catch(() => {});
+    } catch (error) {
+      clickResults.push(`Direct Click: FAILED - ${error}`);
+    }
+
+    // 🚀 МЕТОД 2: Программный клик через события
+    if (!clickSuccess) {
       try {
         const rect = button.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
-        // 🎯 РЕАЛИСТИЧНОЕ ПРИБЛИЖЕНИЕ К КНОПКЕ
-        
-        // Начинаем с точки рядом с кнопкой
-        const startX = centerX + (Math.random() - 0.5) * 100;
-        const startY = centerY + (Math.random() - 0.5) * 100;
-        
-        // Имитируем постепенное приближение к кнопке (3 шага)
-        const steps = 3;
-        for (let i = 0; i < steps; i++) {
-          const progress = (i + 1) / steps;
-          const currentX = startX + (centerX - startX) * progress;
-          const currentY = startY + (centerY - startY) * progress;
-          
-          const mouseMoveEvent = new MouseEvent('mousemove', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            clientX: currentX + (Math.random() - 0.5) * 3, // Небольшой джиттер
-            clientY: currentY + (Math.random() - 0.5) * 3
-          });
-          document.dispatchEvent(mouseMoveEvent);
-          
-          // Человеческая задержка между движениями
-          await new Promise(resolve => setTimeout(resolve, 80 + Math.random() * 120));
-        }
-        
-        // Финальное позиционирование на кнопке
-        const finalMouseMove = new MouseEvent('mousemove', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          clientX: centerX,
-          clientY: centerY
-        });
-        document.dispatchEvent(finalMouseMove);
-        
-        // Пауза перед hover (как человек прицеливается)
-        await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 250));
-        
-        // Наведение на кнопку
-        const mouseEnterEvent = new MouseEvent('mouseenter', {
-          bubbles: false,
-          cancelable: true,
-          view: window,
-          clientX: centerX,
-          clientY: centerY
-        });
-        button.dispatchEvent(mouseEnterEvent);
-        
-        // Hover эффект
-        const mouseOverEvent = new MouseEvent('mouseover', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          clientX: centerX,
-          clientY: centerY
-        });
-        button.dispatchEvent(mouseOverEvent);
-        
-        // Имитация чтения кнопки
-        const buttonText = button.textContent?.trim() || '';
-        const readingTime = Math.max(buttonText.length * 30, 200); // 30ms на символ, минимум 200ms
-        await new Promise(resolve => setTimeout(resolve, readingTime));
-        
-        // 🎯 ИМИТАЦИЯ ПРИНЯТИЯ РЕШЕНИЯ
-        const decisionTime = Math.random() * 400 + 200; // 200-600ms на принятие решения
-        await new Promise(resolve => setTimeout(resolve, decisionTime));
 
-        // Focus на кнопку
-        try {
-          button.focus();
-          await new Promise(resolve => setTimeout(resolve, 50));
-        } catch (e) {
-          console.warn('Focus failed:', e);
-        }
-        
-        // Логируем успешную имитацию
-        logger.success('ContentScript', 'Mouse simulation completed', {
+        // MouseDown
+        button.dispatchEvent(new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: centerX,
+          clientY: centerY,
+          button: 0,
+          buttons: 1
+        }));
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Click
+        button.dispatchEvent(new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: centerX,
+          clientY: centerY,
+          button: 0,
+          buttons: 1
+        }));
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // MouseUp
+        button.dispatchEvent(new MouseEvent('mouseup', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: centerX,
+          clientY: centerY,
+          button: 0,
+          buttons: 0
+        }));
+
+        clickResults.push('Event Click: EXECUTED');
+        clickSuccess = true;
+
+        logger.success('ContentScript', 'Event click executed', {
           url: window.location.href,
-          mouseEvents: ['mousemove', 'mouseenter', 'mouseover'],
-          focusSuccess: true,
-          buttonCoords: { x: centerX, y: centerY },
-          approachSteps: steps,
-          readingTime: readingTime,
-          decisionTime: decisionTime
+          buttonText: initialButtonText,
+          coordinates: { x: centerX, y: centerY }
         }).catch(() => {});
-        
       } catch (error) {
-        // Логируем ошибку имитации
-        logger.error('ContentScript', 'Mouse simulation failed', {
-          url: window.location.href,
-          error: error instanceof Error ? error.message : String(error)
-        }).catch(() => {});
+        clickResults.push(`Event Click: FAILED - ${error}`);
       }
-    } else {
-      // ⚡ ЛЕГКАЯ ИМИТАЦИЯ для неактивной вкладки
-      
+    }
+
+    // 🚀 МЕТОД 3: Принудительный клик через форму
+    if (!clickSuccess) {
       try {
-        // Имитируем "чтение" кнопки через анализ текста
-        const buttonText = button.textContent?.trim() || '';
-        const readingTime = Math.max(buttonText.length * 10, 100); // 10ms на символ, минимум 100ms
-        await new Promise(resolve => setTimeout(resolve, readingTime));
-        
-        // Имитируем focus через программные события (работают в фоне)
-        let focusSuccess = false;
-        try {
-          const focusEvent = new FocusEvent('focus', {
+        // Ищем форму, содержащую кнопку
+        const form = button.closest('form');
+        if (form) {
+          // Если кнопка в форме, пытаемся отправить форму
+          const submitEvent = new Event('submit', {
+            bubbles: true,
+            cancelable: true
+          });
+          form.dispatchEvent(submitEvent);
+          clickResults.push('Form Submit: EXECUTED');
+        } else {
+          // Если нет формы, пытаемся эмулировать Enter
+          button.dispatchEvent(new KeyboardEvent('keydown', {
             bubbles: true,
             cancelable: true,
-            view: window
-          });
-          button.dispatchEvent(focusEvent);
-          await new Promise(resolve => setTimeout(resolve, 50));
-          focusSuccess = true;
-        } catch (e) {
-          console.warn('Focus event failed:', e);
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13
+          }));
+          
+          button.dispatchEvent(new KeyboardEvent('keypress', {
+            bubbles: true,
+            cancelable: true,
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13
+          }));
+          
+          clickResults.push('Keyboard Enter: EXECUTED');
         }
-        
-        // Имитируем hover через CSS классы (если возможно)
-        let hoverSuccess = false;
-        try {
-          button.classList.add('hover', 'focus-visible');
-          await new Promise(resolve => setTimeout(resolve, 100));
-          button.classList.remove('hover', 'focus-visible');
-          hoverSuccess = true;
-        } catch (e) {
-          // Игнорируем ошибки CSS классов
-        }
-        
-        // Логируем успешную легкую имитацию
-        logger.success('ContentScript', 'Lightweight simulation completed', {
+        clickSuccess = true;
+
+        logger.success('ContentScript', 'Alternative click method executed', {
           url: window.location.href,
-          buttonText: buttonText,
-          readingTime: readingTime,
-          focusSuccess: focusSuccess,
-          hoverSuccess: hoverSuccess,
-          textLength: buttonText.length
+          buttonText: initialButtonText,
+          method: form ? 'form_submit' : 'keyboard_enter'
         }).catch(() => {});
-        
       } catch (error) {
-        // Логируем ошибку легкой имитации
-        logger.error('ContentScript', 'Lightweight simulation failed', {
-          url: window.location.href,
-          error: error instanceof Error ? error.message : String(error)
-        }).catch(() => {});
+        clickResults.push(`Alternative Click: FAILED - ${error}`);
       }
     }
 
-    console.log('🤖 Human simulation complete, starting click sequence...');
+    // Ждем результат
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // 4. УНИВЕРСАЛЬНАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ КЛИКОВ (работает везде)
-    let clickSuccess = false;
-    const clickResults: string[] = [];
+    // 🔍 ПРОВЕРКА УСПЕХА
+    let isLikelySuccessful = false;
+    const successIndicators: string[] = [];
 
-    // 🎲 ПРОДВИНУТЫЕ МЕТОДЫ КЛИКОВ для обхода защиты
-    const clickMethods = [
-      { name: 'stealth_injection', weight: isTabActive ? 10 : 5 },      // ULTIMATE STEALTH
-      { name: 'dom_manipulation', weight: isTabActive ? 9 : 4 },        // DOM HACKING
-      { name: 'event_hijacking', weight: isTabActive ? 8 : 4 },         // EVENT HIJACKING
-      { name: 'pointer_events', weight: isTabActive ? 8 : 4 },          // МАКСИМАЛЬНЫЙ приоритет
-      { name: 'touch_events', weight: isTabActive ? 7 : 3 },            // ВЫСОКИЙ приоритет  
-      { name: 'multi_frame', weight: isTabActive ? 6 : 3 },             // ЯДЕРНАЯ ОПЦИЯ
-      { name: 'intersection_click', weight: isTabActive ? 5 : 2 },      // Средний приоритет
-      { name: 'raf_synchronized', weight: isTabActive ? 4 : 2 },        // RAF синхронизация
-      { name: 'realistic_mouse', weight: isTabActive ? 3 : 1 },         // Старый надежный
-      { name: 'direct_click', weight: 2 },                              // Простой клик
-      { name: 'keyboard_enter', weight: 2 },                            // Клавиатурный
-      { name: 'programmatic_click', weight: 1 }                         // Запасной
-    ];
-    
-    // Перемешиваем методы случайным образом, но ГАРАНТИРОВАННО включаем новые
-    const shuffledMethods = clickMethods
-      .sort(() => Math.random() - 0.5)
-      .filter((method) => {
-        // ВСЕГДА включаем ULTIMATE STEALTH ОПЦИИ
-        if (method.name === 'stealth_injection' || 
-            method.name === 'dom_manipulation' || 
-            method.name === 'event_hijacking' ||
-            method.name === 'pointer_events' || 
-            method.name === 'touch_events' || 
-            method.name === 'multi_frame' || 
-            method.name === 'raf_synchronized') {
-          return true;
-        }
-        // Остальные методы включаем с вероятностью 80%
-        return Math.random() > 0.2;
-      });
-    
-    // Случайная задержка перед началом кликов
-    const preClickDelay = Math.random() * 300 + 100;
-    await new Promise(resolve => setTimeout(resolve, preClickDelay));
+    // 1. Проверяем изменение состояния кнопки
+    const currentButton = findBoostButton();
+    if (currentButton) {
+      const currentButtonText = currentButton.textContent?.trim();
+      const currentButtonClasses = currentButton.className;
+      const currentButtonDisabled = currentButton.hasAttribute('disabled');
 
-    // 🔍 ДИАГНОСТИКА: Логируем начальное состояние
-    logger.warning('ContentScript', 'DIAGNOSTIC: Starting click sequence', {
-      url: window.location.href,
-      buttonText: button.textContent?.trim(),
-      buttonClasses: button.className,
-      buttonDisabled: button.hasAttribute('disabled'),
-      buttonAriaDisabled: button.getAttribute('aria-disabled'),
-      shuffledMethods: shuffledMethods.map(m => m.name),
-      tabActive: isTabActive
-    }).catch(() => {});
-
-    for (const method of shuffledMethods) {
-      // Случайная задержка между методами
-      const methodDelay = Math.random() * 200 + 50;
-      await new Promise(resolve => setTimeout(resolve, methodDelay));
-      
-      if (method.name === 'pointer_events') {
-        // 🎯 POINTER EVENTS API (самый современный и мощный)
-        try {
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // 1. Имитируем реалистичное движение указателя к кнопке
-          const startX = centerX + (Math.random() - 0.5) * 100;
-          const startY = centerY + (Math.random() - 0.5) * 100;
-          
-          // Постепенное приближение к кнопке (3 шага)
-          for (let i = 0; i < 3; i++) {
-            const progress = (i + 1) / 3;
-            const currentX = startX + (centerX - startX) * progress;
-            const currentY = startY + (centerY - startY) * progress;
-            
-            const pointerMove = new PointerEvent('pointermove', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-              pointerId: 1,
-              pointerType: 'mouse',
-              clientX: currentX + (Math.random() - 0.5) * 3,
-              clientY: currentY + (Math.random() - 0.5) * 3,
-              pressure: 0.5,
-              width: 1,
-              height: 1
-            });
-            button.dispatchEvent(pointerMove);
-            
-            await new Promise(resolve => setTimeout(resolve, 60 + Math.random() * 80));
-          }
-          
-          // 2. Pointer Enter (наведение)
-          const pointerEnter = new PointerEvent('pointerenter', {
-            bubbles: false,
-            cancelable: true,
-            view: window,
-            pointerId: 1,
-            pointerType: 'mouse',
-            clientX: centerX,
-            clientY: centerY,
-            pressure: 0.5
-          });
-          button.dispatchEvent(pointerEnter);
-          
-          await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
-          
-          // 3. Pointer Over (hover эффект)
-          const pointerOver = new PointerEvent('pointerover', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            pointerId: 1,
-            pointerType: 'mouse',
-            clientX: centerX,
-            clientY: centerY,
-            pressure: 0.5
-          });
-          button.dispatchEvent(pointerOver);
-          
-          await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
-          
-          // 4. Pointer Down (нажатие)
-          const pointerDown = new PointerEvent('pointerdown', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            pointerId: 1,
-            pointerType: 'mouse',
-            clientX: centerX + (Math.random() - 0.5) * 2,
-            clientY: centerY + (Math.random() - 0.5) * 2,
-            pressure: 0.8,
-            button: 0,
-            buttons: 1,
-            width: 1,
-            height: 1
-          });
-          button.dispatchEvent(pointerDown);
-          
-          // Человеческое время удержания
-          await new Promise(resolve => setTimeout(resolve, 80 + Math.random() * 120));
-          
-          // 5. Pointer Up (отпускание)
-          const pointerUp = new PointerEvent('pointerup', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            pointerId: 1,
-            pointerType: 'mouse',
-            clientX: centerX,
-            clientY: centerY,
-            pressure: 0,
-            button: 0,
-            buttons: 0,
-            width: 1,
-            height: 1
-          });
-          button.dispatchEvent(pointerUp);
-          
-          // 6. Финальный клик для совместимости
-          await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 30));
-          button.click();
-          
-          clickResults.push('Pointer Events: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Pointer Events: FAILED - ${error}`);
-        }
-      } else if (method.name === 'touch_events' && isTabActive) {
-        // 🎯 TOUCH EVENTS API (обход мобильной защиты)
-        try {
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // 1. Имитируем движение пальцами по экрану
-          const touchMove = new TouchEvent('touchmove', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            touches: [
-              new Touch({
-                identifier: 1,
-                target: button,
-                clientX: centerX,
-                clientY: centerY,
-                radiusX: 20,
-                radiusY: 20,
-                rotationAngle: 0,
-                force: 0.5
-              })
-            ],
-            changedTouches: [],
-            targetTouches: [],
-            ctrlKey: false,
-            altKey: false,
-            shiftKey: false,
-            metaKey: false
-          });
-          button.dispatchEvent(touchMove);
-          
-          await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
-          
-          // 2. Touch End (отпускание)
-          const touchEnd = new TouchEvent('touchend', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            touches: [],
-            changedTouches: [],
-            targetTouches: [],
-            ctrlKey: false,
-            altKey: false,
-            shiftKey: false,
-            metaKey: false
-          });
-          button.dispatchEvent(touchEnd);
-          
-          await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 50));
-          
-          // 3. Touch Cancel (отмена)
-          const touchCancel = new TouchEvent('touchcancel', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            touches: [],
-            changedTouches: [],
-            targetTouches: [],
-            ctrlKey: false,
-            altKey: false,
-            shiftKey: false,
-            metaKey: false
-          });
-          button.dispatchEvent(touchCancel);
-          
-          await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 50));
-          
-          // 4. Финальный клик для совместимости
-          await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 30));
-          button.click();
-          
-          clickResults.push('Touch Events: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Touch Events: FAILED - ${error}`);
-        }
-      } else if (method.name === 'multi_frame') {
-        // 🚀 MULTI-FRAME CLICK (ЯДЕРНАЯ ОПЦИЯ - растянутый клик через несколько фреймов)
-        try {
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          let frameCount = 0;
-          const maxFrames = 5;
-          let clickExecuted = false;
-          
-          const frameClickPromise = new Promise<boolean>((resolve) => {
-            const executeFrameClick = () => {
-              frameCount++;
-              
-              try {
-                switch (frameCount) {
-                  case 1:
-                    // Frame 1: Подготовка
-                    button.dispatchEvent(new MouseEvent('mouseover', {
-                      bubbles: true, cancelable: true, view: window,
-                      clientX: centerX, clientY: centerY
-                    }));
-                    break;
-                    
-                  case 2:
-                    // Frame 2: Фокус
-                    button.focus();
-                    button.dispatchEvent(new FocusEvent('focus', {
-                      bubbles: true, cancelable: true, view: window
-                    }));
-                    break;
-                    
-                  case 3:
-                    // Frame 3: MouseDown
-                    button.dispatchEvent(new MouseEvent('mousedown', {
-                      bubbles: true, cancelable: true, view: window,
-                      clientX: centerX, clientY: centerY, button: 0, buttons: 1
-                    }));
-                    break;
-                    
-                  case 4:
-                    // Frame 4: Click
-                    button.dispatchEvent(new MouseEvent('click', {
-                      bubbles: true, cancelable: true, view: window,
-                      clientX: centerX, clientY: centerY, button: 0, buttons: 0
-                    }));
-                    break;
-                    
-                  case 5:
-                    // Frame 5: MouseUp + Native Click
-                    button.dispatchEvent(new MouseEvent('mouseup', {
-                      bubbles: true, cancelable: true, view: window,
-                      clientX: centerX, clientY: centerY, button: 0, buttons: 0
-                    }));
-                    button.click(); // Финальный native клик
-                    clickExecuted = true;
-                    resolve(true);
-                    return;
-                }
-                
-                // Продолжаем в следующем фрейме
-                if (frameCount < maxFrames) {
-                  requestAnimationFrame(executeFrameClick);
-                } else {
-                  resolve(false);
-                }
-              } catch (error) {
-                resolve(false);
-              }
-            };
-            
-            // Начинаем выполнение
-            requestAnimationFrame(executeFrameClick);
-          });
-          
-          // Ждем завершения multi-frame клика
-          const success = await frameClickPromise;
-          
-          if (success && clickExecuted) {
-            clickResults.push('Multi-Frame: SUCCESS (5 frames executed)');
-            clickSuccess = true;
-          } else {
-            clickResults.push(`Multi-Frame: FAILED (${frameCount} frames executed)`);
-          }
-        } catch (error) {
-          clickResults.push(`Multi-Frame: FAILED - ${error}`);
-        }
-      } else if (method.name === 'intersection_click' && isTabActive) {
-        // 🎯 INTERSECTION OBSERVER CLICK (клик когда элемент точно видим)
-        try {
-          // Проверяем что кнопка действительно видна на экране
-          const rect = button.getBoundingClientRect();
-          const isVisible = rect.top >= 0 && rect.left >= 0 && 
-                           rect.bottom <= window.innerHeight && 
-                           rect.right <= window.innerWidth;
-          
-          if (!isVisible) {
-            // Прокручиваем к кнопке если она не видна
-            button.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
-          }
-          
-          // Создаем Intersection Observer для точного определения видимости
-          const observerPromise = new Promise<boolean>((resolve) => {
-            const observer = new IntersectionObserver((entries) => {
-              const entry = entries[0]; if (!entry) return;
-              if (entry.isIntersecting && entry.intersectionRatio > 0.8) {
-                observer.disconnect();
-                resolve(true);
-              }
-            }, {
-              threshold: [0.8, 0.9, 1.0] // Требуем высокую видимость
-            });
-            
-            observer.observe(button);
-            
-            // Таймаут на случай если observer не сработает
-            setTimeout(() => {
-              observer.disconnect();
-              resolve(false);
-            }, 2000);
-          });
-          
-          const isFullyVisible = await observerPromise;
-          
-          if (isFullyVisible) {
-            // Кнопка полностью видна - выполняем клик
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // Имитируем точное наведение на видимую кнопку
-            const preciseMove = new MouseEvent('mousemove', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-              clientX: centerX,
-              clientY: centerY
-            });
-            document.dispatchEvent(preciseMove);
-            
-            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
-            
-            // Клик с высокой точностью
-            const preciseClick = new MouseEvent('click', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-              clientX: centerX,
-              clientY: centerY,
-              button: 0,
-              buttons: 1
-            });
-            button.dispatchEvent(preciseClick);
-            
-            clickResults.push('Intersection Click: SUCCESS');
-            clickSuccess = true;
-          } else {
-            clickResults.push('Intersection Click: FAILED - not fully visible');
-          }
-        } catch (error) {
-          clickResults.push(`Intersection Click: FAILED - ${error}`);
-        }
-      } else if (method.name === 'raf_synchronized') {
-        // 🚀 RAF SYNCHRONIZED CLICK (ЯДЕРНАЯ ОПЦИЯ - синхронизация с браузером)
-        try {
-          let clickExecuted = false;
-          
-          // Настраиваем MutationObserver для детекции изменений кнопки
-          const mutationPromise = new Promise<boolean>((resolve) => {
-            const observer = new MutationObserver((mutations) => {
-              for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && 
-                    mutation.target === button &&
-                    (mutation.attributeName === 'disabled' || 
-                     mutation.attributeName === 'class')) {
-                  observer.disconnect();
-                  resolve(true);
-                  break;
-                }
-              }
-            });
-            
-            observer.observe(button, {
-              attributes: true,
-              attributeFilter: ['disabled', 'class', 'aria-disabled']
-            });
-            
-            // Таймаут для observer
-            setTimeout(() => {
-              observer.disconnect();
-              resolve(false);
-            }, 3000);
-          });
-          
-          // Выполняем клик синхронно с RAF (максимальная точность)
-          const rafClickPromise = new Promise<boolean>((resolve) => {
-            const performClick = () => {
-              if (clickExecuted) return;
-              clickExecuted = true;
-              
-              try {
-                const rect = button.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                
-                // МУЛЬТИПЛЕКСНЫЙ КЛИК - все события в одном RAF цикле
-                
-                // 1. MouseDown
-                button.dispatchEvent(new MouseEvent('mousedown', {
-                  bubbles: true, cancelable: true, view: window,
-                  clientX: centerX, clientY: centerY, button: 0, buttons: 1
-                }));
-                
-                // 2. Focus
-                button.focus();
-                
-                // 3. PointerDown (современный API)
-                button.dispatchEvent(new PointerEvent('pointerdown', {
-                  bubbles: true, cancelable: true, view: window,
-                  pointerId: 1, pointerType: 'mouse',
-                  clientX: centerX, clientY: centerY, pressure: 0.8, button: 0, buttons: 1
-                }));
-                
-                // 4. Click
-                button.dispatchEvent(new MouseEvent('click', {
-                  bubbles: true, cancelable: true, view: window,
-                  clientX: centerX, clientY: centerY, button: 0, buttons: 0
-                }));
-                
-                // 5. PointerUp
-                button.dispatchEvent(new PointerEvent('pointerup', {
-                  bubbles: true, cancelable: true, view: window,
-                  pointerId: 1, pointerType: 'mouse',
-                  clientX: centerX, clientY: centerY, pressure: 0, button: 0, buttons: 0
-                }));
-                
-                // 6. MouseUp
-                button.dispatchEvent(new MouseEvent('mouseup', {
-                  bubbles: true, cancelable: true, view: window,
-                  clientX: centerX, clientY: centerY, button: 0, buttons: 0
-                }));
-                
-                // 7. Native click как финальный удар
-                button.click();
-                
-                resolve(true);
-              } catch (error) {
-                resolve(false);
-              }
-            };
-            
-            // Двойной RAF для максимальной синхронизации
-            requestAnimationFrame(() => {
-              requestAnimationFrame(performClick);
-            });
-          });
-          
-          // Ждем результат клика И мутации
-          const [rafResult, mutationResult] = await Promise.all([
-            rafClickPromise,
-            mutationPromise
-          ]);
-          
-          if (rafResult && mutationResult) {
-            clickResults.push('RAF Synchronized: SUCCESS (click + mutation detected)');
-            clickSuccess = true;
-          } else if (rafResult) {
-            clickResults.push('RAF Synchronized: PARTIAL (click executed)');
-            clickSuccess = true;
-          } else {
-            clickResults.push('RAF Synchronized: FAILED');
-          }
-        } catch (error) {
-          clickResults.push(`RAF Synchronized: FAILED - ${error}`);
-        }
-      } else if (method.name === 'stealth_injection') {
-        // 🥷 STEALTH INJECTION (ULTIMATE STEALTH - прямая инъекция в DOM)
-        try {
-          // Создаем невидимый клон кнопки для тестирования
-          const buttonClone = button.cloneNode(true) as HTMLElement;
-          buttonClone.style.position = 'absolute';
-          buttonClone.style.left = '-9999px';
-          buttonClone.style.top = '-9999px';
-          buttonClone.style.visibility = 'hidden';
-          buttonClone.style.pointerEvents = 'none';
-          document.body.appendChild(buttonClone);
-          
-          // Инъекция через прямое изменение DOM свойств
-          const originalOnClick = button.onclick;
-          
-          // Временно перехватываем все события
-          const eventCapture: any[] = [];
-          const originalAddEventListener = button.addEventListener;
-          
-          button.addEventListener = function(type: string, listener: any, options?: any) {
-            eventCapture.push({ type, listener, options });
-            return originalAddEventListener.call(this, type, listener, options);
-          };
-          
-          // Имитируем "естественное" взаимодействие через DOM манипуляции
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // Создаем синтетическое событие с полными метаданными
-          const syntheticEvent = {
-            type: 'click',
-            target: button,
-            currentTarget: button,
-            bubbles: true,
-            cancelable: true,
-            composed: true,
-            isTrusted: true, // Пытаемся обмануть проверку isTrusted
-            timeStamp: performance.now(),
-            clientX: centerX,
-            clientY: centerY,
-            screenX: centerX + window.screenX,
-            screenY: centerY + window.screenY,
-            button: 0,
-            buttons: 0,
-            ctrlKey: false,
-            shiftKey: false,
-            altKey: false,
-            metaKey: false,
-            detail: 1,
-            view: window,
-            preventDefault: () => {},
-            stopPropagation: () => {},
-            stopImmediatePropagation: () => {}
-          };
-          
-          // Прямой вызов обработчиков через DOM API
-          if (originalOnClick) {
-            originalOnClick.call(button, syntheticEvent as any);
-          }
-          
-          // Триггерим все зарегистрированные обработчики
-          for (const captured of eventCapture) {
-            if (captured.type === 'click' && typeof captured.listener === 'function') {
-              captured.listener.call(button, syntheticEvent);
-            }
-          }
-          
-          // Финальный native клик для гарантии
-          await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
-          button.click();
-          
-          // Очистка
-          document.body.removeChild(buttonClone);
-          button.addEventListener = originalAddEventListener;
-          
-          clickResults.push('Stealth Injection: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Stealth Injection: FAILED - ${error}`);
-        }
-      } else if (method.name === 'dom_manipulation') {
-        // 🔧 DOM MANIPULATION (прямое изменение DOM для обхода защиты)
-        try {
-          // Сохраняем оригинальное состояние
-          const originalDisabled = (button as HTMLButtonElement).disabled;
-          const originalAriaDisabled = button.getAttribute('aria-disabled');
-          const originalClasses = button.className;
-          
-          // Временно "активируем" кнопку если она заблокирована
-          if ((button as HTMLButtonElement).disabled) {
-            (button as HTMLButtonElement).disabled = false;
-          }
-          if (button.getAttribute('aria-disabled') === 'true') {
-            button.setAttribute('aria-disabled', 'false');
-          }
-          
-          // Удаляем блокирующие CSS классы
-          const blockingClasses = ['disabled', 'inactive', 'loading', 'cooldown'];
-          blockingClasses.forEach(cls => {
-            if (button.classList.contains(cls)) {
-              button.classList.remove(cls);
-            }
-          });
-          
-          // Добавляем активные классы если нужно
-          if (!button.classList.contains('active')) {
-            button.classList.add('active');
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
-          
-          // Создаем максимально реалистичное событие клика
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // Последовательность событий как у реального пользователя
-          const events = [
-            new MouseEvent('mouseenter', { bubbles: false, cancelable: true, view: window, clientX: centerX, clientY: centerY }),
-            new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY }),
-            new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY, button: 0, buttons: 1 }),
-            new FocusEvent('focus', { bubbles: true, cancelable: true, view: window }),
-            new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY, button: 0, buttons: 0 }),
-            new MouseEvent('click', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY, button: 0, buttons: 0 })
-          ];
-          
-          for (const event of events) {
-            button.dispatchEvent(event);
-            await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 40));
-          }
-          
-          // Финальный native клик
-          button.click();
-          
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-          // Восстанавливаем оригинальное состояние
-          (button as HTMLButtonElement).disabled = originalDisabled;
-          if (originalAriaDisabled !== null) {
-            button.setAttribute('aria-disabled', originalAriaDisabled);
-          }
-          button.className = originalClasses;
-          
-          clickResults.push('DOM Manipulation: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`DOM Manipulation: FAILED - ${error}`);
-        }
-      } else if (method.name === 'event_hijacking') {
-        // 🎭 EVENT HIJACKING (перехват и модификация событий)
-        try {
-          // Перехватываем и модифицируем события на уровне document
-          const originalDispatchEvent = Document.prototype.dispatchEvent;
-          const originalElementDispatchEvent = Element.prototype.dispatchEvent;
-          
-          let eventIntercepted = false;
-          
-          // Перехватчик для document
-          Document.prototype.dispatchEvent = function(event: Event) {
-            if (event.type === 'click' && event.target === button) {
-              eventIntercepted = true;
-              // Модифицируем событие чтобы оно выглядело более "человечным"
-              Object.defineProperty(event, 'isTrusted', { value: true, writable: false });
-              Object.defineProperty(event, 'timeStamp', { value: performance.now(), writable: false });
-            }
-            return originalDispatchEvent.call(this, event);
-          };
-          
-          // Перехватчик для элементов
-          Element.prototype.dispatchEvent = function(event: Event) {
-            if (this === button && event.type === 'click') {
-              eventIntercepted = true;
-              // Добавляем реалистичные метаданные
-              Object.defineProperty(event, 'isTrusted', { value: true, writable: false });
-              Object.defineProperty(event, 'detail', { value: 1, writable: false });
-            }
-            return originalElementDispatchEvent.call(this, event);
-          };
-          
-          // Создаем "перехваченное" событие клика
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // Имитируем последовательность как у реального браузера
-          const mouseDown = new MouseEvent('mousedown', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            clientX: centerX,
-            clientY: centerY,
-            button: 0,
-            buttons: 1
-          });
-          
-          const mouseUp = new MouseEvent('mouseup', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            clientX: centerX,
-            clientY: centerY,
-            button: 0,
-            buttons: 0
-          });
-          
-          const click = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            clientX: centerX,
-            clientY: centerY,
-            button: 0,
-            buttons: 0
-          });
-          
-          // Выполняем последовательность с перехватом
-          button.dispatchEvent(mouseDown);
-          await new Promise(resolve => setTimeout(resolve, 80 + Math.random() * 120));
-          
-          button.dispatchEvent(mouseUp);
-          await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 40));
-          
-          button.dispatchEvent(click);
-          await new Promise(resolve => setTimeout(resolve, 50));
-          
-          // Дополнительный native клик
-          button.click();
-          
-          // Восстанавливаем оригинальные методы
-          Document.prototype.dispatchEvent = originalDispatchEvent;
-          Element.prototype.dispatchEvent = originalElementDispatchEvent;
-          
-          clickResults.push('Event Hijacking: SUCCESS' + (eventIntercepted ? ' (intercepted)' : ''));
-          clickSuccess = true;
-        } catch (error) {
-          // Восстанавливаем методы в случае ошибки
-          try {
-            Document.prototype.dispatchEvent = Document.prototype.dispatchEvent;
-            Element.prototype.dispatchEvent = Element.prototype.dispatchEvent;
-          } catch {}
-          clickResults.push(`Event Hijacking: FAILED - ${error}`);
-        }
-      } else if (method.name === 'realistic_mouse' && isTabActive) {
-        // Method 1: Реалистичная последовательность событий (только для активных)
-        try {
-          const rect = button.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // 🎯 БОЛЕЕ РЕАЛИСТИЧНАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ
-          
-          // Имитируем колебания перед кликом (как человек прицеливается)
-          for (let i = 0; i < 2; i++) {
-            const jitterX = centerX + (Math.random() - 0.5) * 4;
-            const jitterY = centerY + (Math.random() - 0.5) * 4;
-            
-            const jitterMove = new MouseEvent('mousemove', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-              clientX: jitterX,
-              clientY: jitterY
-            });
-            document.dispatchEvent(jitterMove);
-            
-            await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 50));
-          }
-          
-          // Финальное позиционирование
-          const finalX = centerX + (Math.random() - 0.5) * 2;
-          const finalY = centerY + (Math.random() - 0.5) * 2;
-          
-          // Реалистичная последовательность с вариативными задержками
-          const mouseDownDelay = Math.random() * 50;
-          const mouseUpDelay = 80 + Math.random() * 120; // 80-200ms
-          const clickDelay = 10 + Math.random() * 20;
-          
-          const mouseEvents = [
-            { type: 'mousedown', delay: mouseDownDelay },
-            { type: 'mouseup', delay: mouseUpDelay },
-            { type: 'click', delay: clickDelay }
-          ];
-
-          for (const eventConfig of mouseEvents) {
-            await new Promise(resolve => setTimeout(resolve, eventConfig.delay));
-            
-            const event = new MouseEvent(eventConfig.type, {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-              button: 0,
-              buttons: eventConfig.type === 'mousedown' ? 1 : 0,
-              clientX: finalX,
-              clientY: finalY,
-              screenX: finalX + window.screenX,
-              screenY: finalY + window.screenY
-            });
-            
-            button.dispatchEvent(event);
-          }
-          
-          clickResults.push('Realistic mouse: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Realistic mouse: FAILED - ${error}`);
-        }
-      } else if (method.name === 'direct_click') {
-        // Method 2: Direct click с человеческой задержкой
-        try {
-          const delay = isTabActive ? (150 + Math.random() * 250) : (75 + Math.random() * 125);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
-          // Добавляем небольшое движение мыши перед кликом
-          if (isTabActive) {
-            const rect = button.getBoundingClientRect();
-            const moveEvent = new MouseEvent('mousemove', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-              clientX: rect.left + rect.width / 2 + (Math.random() - 0.5) * 2,
-              clientY: rect.top + rect.height / 2 + (Math.random() - 0.5) * 2
-            });
-            document.dispatchEvent(moveEvent);
-            await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 30));
-          }
-          
-          button.click();
-          clickResults.push('Direct click: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Direct click: FAILED - ${error}`);
-        }
-      } else if (method.name === 'keyboard_enter') {
-        // Method 3: Keyboard activation с реалистичными задержками
-        try {
-          const keyDelay = isTabActive ? (60 + Math.random() * 80) : (30 + Math.random() * 40);
-          await new Promise(resolve => setTimeout(resolve, keyDelay));
-          
-          // Имитируем нажатие клавиши как человек
-          const enterDownEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true
-          });
-          button.dispatchEvent(enterDownEvent);
-          
-          // Человеческая задержка между keydown и keyup
-          const keyHoldTime = isTabActive ? (60 + Math.random() * 140) : (40 + Math.random() * 60);
-          await new Promise(resolve => setTimeout(resolve, keyHoldTime));
-          
-          const enterUpEvent = new KeyboardEvent('keyup', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true
-          });
-          button.dispatchEvent(enterUpEvent);
-          
-          clickResults.push('Keyboard Enter: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Keyboard Enter: FAILED - ${error}`);
-        }
-      } else if (method.name === 'programmatic_click') {
-        // Method 4: Программный клик через dispatchEvent (запасной)
-        try {
-          const delay = isTabActive ? (40 + Math.random() * 60) : (20 + Math.random() * 30);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
-          const clickEvent = new Event('click', {
-            bubbles: true,
-            cancelable: true
-          });
-          button.dispatchEvent(clickEvent);
-          
-          clickResults.push('Programmatic click: SUCCESS');
-          clickSuccess = true;
-        } catch (error) {
-          clickResults.push(`Programmatic click: FAILED - ${error}`);
-        }
+      if (currentButtonText !== initialButtonText) {
+        successIndicators.push('button_text_changed');
+        isLikelySuccessful = true;
       }
-      
-      // 🎲 Случайная пауза между методами (имитация человеческого поведения)
-      if (shuffledMethods.indexOf(method) < shuffledMethods.length - 1) {
-        const betweenMethodsDelay = Math.random() * 100 + 50;
-        await new Promise(resolve => setTimeout(resolve, betweenMethodsDelay));
-      }
-    }
 
-    console.log('📊 Click attempt summary:', clickResults);
-
-    if (clickSuccess) {
-      // 🔍 ДИАГНОСТИКА: Логируем состояние после кликов
-      const postClickButton = findBoostButton();
-      const postClickActive = postClickButton ? isButtonActive() : false;
-      const postClickPageText = document.body.textContent?.toLowerCase() || '';
-      
-      logger.warning('ContentScript', 'DIAGNOSTIC: Post-click state', {
-        url: window.location.href,
-        clickResults: clickResults,
-        postClickButtonFound: !!postClickButton,
-        postClickButtonActive: postClickActive,
-        postClickButtonText: postClickButton?.textContent?.trim(),
-        postClickButtonClasses: postClickButton?.className,
-        pageTextLength: postClickPageText.length,
-        hasSuccessKeywords: {
-          успешно: postClickPageText.includes('успешно'),
-          обновлено: postClickPageText.includes('обновлено'),
-          поднято: postClickPageText.includes('поднято')
-        }
-      }).catch(() => {});
-
-      // Логируем успешный клик с детальной аналитикой
-      logger.success('ContentScript', 'Button click attempts completed', {
-        url: window.location.href,
-        buttonText: button.textContent?.trim(),
-        methods: clickResults,
-        tabActive: isTabActive,
-        simulationType: isTabActive ? 'full' : 'lightweight',
-        totalMethods: clickResults.length,
-        successfulMethods: clickResults.filter(r => r.includes('SUCCESS')).length,
-        failedMethods: clickResults.filter(r => r.includes('FAILED')).length
-      }).catch(() => {});
-      
-      // 5. АДАПТИВНОЕ ОЖИДАНИЕ ОТВЕТА
-      const waitTime = isTabActive ? 5000 : 3000; // Немного больше для фоновых вкладок
-      
-      // Имитируем человеческое ожидание с проверками
-      const checkInterval = 500;
-      const maxChecks = Math.floor(waitTime / checkInterval);
-      let checksPerformed = 0;
-      let buttonStateChanges = 0;
-      let successIndicatorsFound: string[] = [];
-      
-      for (let i = 0; i < maxChecks; i++) {
-        await new Promise(resolve => setTimeout(resolve, checkInterval));
-        checksPerformed++;
-        
-        // Проверяем изменения на странице
-        const buttonAfterClick = findBoostButton();
-        if (buttonAfterClick) {
-          const isStillActive = isButtonActive();
-          
-          if (!isStillActive) {
-            buttonStateChanges++;
-            
-            // 🔍 ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ждем и проверяем, не вернулась ли кнопка к активному состоянию
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Ждем 1.5 секунды
-            
-            const buttonAfterDelay = findBoostButton();
-            const stillInactiveAfterDelay = buttonAfterDelay ? !isButtonActive() : false;
-            
-            if (stillInactiveAfterDelay) {
-              // Логируем подтвержденное изменение состояния кнопки
-              logger.success('ContentScript', 'Button state change confirmed - click successful', {
-                url: window.location.href,
-                checksPerformed: checksPerformed,
-                waitTime: waitTime,
-                simulationType: isTabActive ? 'full' : 'lightweight',
-                detectionMethod: 'button_state_change_verified',
-                stableInactiveTime: 1500
-              }).catch(() => {});
-              
-              // Дополнительная небольшая задержка для завершения
-              await new Promise(resolve => setTimeout(resolve, 500));
-              return true;
-            } else {
-              // Логируем возврат кнопки к активному состоянию
-              logger.warning('ContentScript', 'Button returned to active state - possible rollback', {
-                url: window.location.href,
-                checksPerformed: checksPerformed,
-                simulationType: isTabActive ? 'full' : 'lightweight',
-                detectionMethod: 'button_reactivation_detected',
-                rollbackTime: 1500
-              }).catch(() => {});
-              
-              // Продолжаем цикл ожидания
-            }
-          }
-        }
-        
-        // Проверяем индикаторы успеха на странице
-        const successIndicators = [
-          'обновлено', 'поднято', 'успешно', 'updated', 'boosted', 'success'
-        ];
-        
-        const pageText = document.body.textContent?.toLowerCase() || '';
-        for (const indicator of successIndicators) {
-          if (pageText.includes(indicator) && !successIndicatorsFound.includes(indicator)) {
-            successIndicatorsFound.push(indicator);
-            
-            // 🔍 ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ждем еще немного и проверяем, не откатился ли результат
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Ждем 2 секунды
-            
-            // Проверяем, что кнопка все еще неактивна или индикатор все еще есть
-            const buttonAfterDelay = findBoostButton();
-            const pageTextAfterDelay = document.body.textContent?.toLowerCase() || '';
-            const indicatorStillPresent = pageTextAfterDelay.includes(indicator);
-            const buttonStillInactive = buttonAfterDelay ? !isButtonActive() : false;
-            
-            if (indicatorStillPresent && buttonStillInactive) {
-              // Логируем подтвержденный успех
-              logger.success('ContentScript', 'Success confirmed after verification delay', {
-                url: window.location.href,
-                indicator: indicator,
-                indicatorStillPresent: indicatorStillPresent,
-                buttonStillInactive: buttonStillInactive,
-                checksPerformed: checksPerformed,
-                waitTime: waitTime,
-                simulationType: isTabActive ? 'full' : 'lightweight',
-                detectionMethod: 'success_indicator_verified'
-              }).catch(() => {});
-              
-              return true;
-            } else {
-              // Логируем откат результата
-              logger.warning('ContentScript', 'Success indicator disappeared - possible rollback detected', {
-                url: window.location.href,
-                indicator: indicator,
-                indicatorStillPresent: indicatorStillPresent,
-                buttonStillInactive: buttonStillInactive,
-                checksPerformed: checksPerformed,
-                simulationType: isTabActive ? 'full' : 'lightweight',
-                detectionMethod: 'rollback_detected'
-              }).catch(() => {});
-              
-              // Продолжаем ожидание, возможно другие методы сработают
-            }
-          }
-        }
+      if (currentButtonClasses !== initialButtonClasses) {
+        successIndicators.push('button_classes_changed');
+        isLikelySuccessful = true;
       }
-      
-      // Логируем результаты ожидания
-      logger.warning('ContentScript', 'Intelligent waiting completed', {
-        url: window.location.href,
-        checksPerformed: checksPerformed,
-        maxChecks: maxChecks,
-        waitTime: waitTime,
-        buttonStateChanges: buttonStateChanges,
-        successIndicatorsFound: successIndicatorsFound,
-        simulationType: isTabActive ? 'full' : 'lightweight'
-      }).catch(() => {});
-      
-      // 🔍 ФИНАЛЬНАЯ ПРОВЕРКА: анализируем общее состояние страницы
-      
-      const finalButton = findBoostButton();
-      const finalButtonActive = finalButton ? isButtonActive() : false;
-      const finalPageText = document.body.textContent?.toLowerCase() || '';
-      
-      // Проверяем дополнительные индикаторы
-      const additionalSuccessIndicators = [
-        'резюме обновлено',
-        'резюме поднято', 
-        'поднято в поиске',
-        'обновление прошло успешно',
-        'resume updated',
-        'resume boosted'
-      ];
-      
-      const foundAdditionalIndicators: string[] = [];
-      for (const indicator of additionalSuccessIndicators) {
-        if (finalPageText.includes(indicator)) {
-          foundAdditionalIndicators.push(indicator);
-        }
+
+      if (currentButtonDisabled !== initialButtonDisabled) {
+        successIndicators.push('button_disabled_state_changed');
+        isLikelySuccessful = true;
       }
-      
-      // Проверяем изменения в URL (некоторые сайты добавляют параметры успеха)
-      const urlChanged = window.location.href !== window.location.href.split('?')[0];
-      const hasSuccessParams = window.location.href.includes('success') || 
-                              window.location.href.includes('updated') ||
-                              window.location.href.includes('boosted');
-      
-      // Итоговая оценка успеха
-      const successScore = 
-        (foundAdditionalIndicators.length > 0 ? 2 : 0) +
-        (successIndicatorsFound.length > 0 ? 2 : 0) +
-        (!finalButtonActive ? 1 : 0) +
-        (buttonStateChanges > 0 ? 1 : 0) +
-        (hasSuccessParams ? 1 : 0);
-      
-      // 🚨 КРИТИЧЕСКАЯ ПРОВЕРКА: если кнопка вернулась в активное состояние после изменений - это rollback!
-      const rollbackDetected = buttonStateChanges > 0 && finalButtonActive;
-      
-      // Если rollback детектирован - это автоматически провал, независимо от других индикаторов
-      const isLikelySuccessful = !rollbackDetected && successScore >= 3;
-      
-      // 🔍 ДИАГНОСТИКА: Детальная финальная проверка
-      logger.warning('ContentScript', 'DIAGNOSTIC: Final analysis details', {
-        url: window.location.href,
-        finalButton: {
-          found: !!finalButton,
-          active: finalButtonActive,
-          text: finalButton?.textContent?.trim(),
-          classes: finalButton?.className,
-          disabled: finalButton?.hasAttribute('disabled'),
-          ariaDisabled: finalButton?.getAttribute('aria-disabled')
-        },
-        pageAnalysis: {
-          textLength: finalPageText.length,
-          hasSuccessKeywords: {
-            успешно: finalPageText.includes('успешно'),
-            обновлено: finalPageText.includes('обновлено'),
-            поднято: finalPageText.includes('поднято'),
-            'резюме обновлено': finalPageText.includes('резюме обновлено'),
-            'резюме поднято': finalPageText.includes('резюме поднято'),
-            'поднято в поиске': finalPageText.includes('поднято в поиске')
-          }
-        },
-        scoring: {
-          foundAdditionalIndicators: foundAdditionalIndicators,
-          successIndicatorsFound: successIndicatorsFound,
-          finalButtonActive: finalButtonActive,
-          buttonStateChanges: buttonStateChanges,
-          hasSuccessParams: hasSuccessParams,
-          rollbackDetected: rollbackDetected,
-          successScore: successScore,
-          threshold: 3,
-          isLikelySuccessful: isLikelySuccessful
-        },
-        urlInfo: {
-          current: window.location.href,
-          urlChanged: urlChanged,
-          hasSuccessParams: hasSuccessParams
-        }
-      }).catch(() => {});
-      
-      if (isLikelySuccessful) {
-        logger.success('ContentScript', 'Final analysis indicates likely success', {
-          url: window.location.href,
-          successScore: successScore,
-          foundAdditionalIndicators: foundAdditionalIndicators,
-          successIndicatorsFound: successIndicatorsFound,
-          finalButtonActive: finalButtonActive,
-          buttonStateChanges: buttonStateChanges,
-          hasSuccessParams: hasSuccessParams,
-          rollbackDetected: rollbackDetected,
-          urlChanged: urlChanged,
-          simulationType: isTabActive ? 'full' : 'lightweight',
-          detectionMethod: 'comprehensive_analysis'
-        }).catch(() => {});
-        
-        return true;
-      } else {
-        logger.warning('ContentScript', 'Final analysis indicates likely failure', {
-          url: window.location.href,
-          successScore: successScore,
-          foundAdditionalIndicators: foundAdditionalIndicators,
-          successIndicatorsFound: successIndicatorsFound,
-          finalButtonActive: finalButtonActive,
-          buttonStateChanges: buttonStateChanges,
-          hasSuccessParams: hasSuccessParams,
-          rollbackDetected: rollbackDetected,
-          urlChanged: urlChanged,
-          simulationType: isTabActive ? 'full' : 'lightweight',
-          detectionMethod: rollbackDetected ? 'rollback_failure' : 'comprehensive_analysis'
-        }).catch(() => {});
-        
-        return false;
+
+      // Проверяем специфические классы успеха
+      if (currentButtonClasses.includes('disabled') || 
+          currentButtonClasses.includes('success') ||
+          currentButtonClasses.includes('completed')) {
+        successIndicators.push('success_class_detected');
+        isLikelySuccessful = true;
       }
     } else {
-      console.error('❌ All click methods failed');
+      // Кнопка исчезла - возможно, успех
+      successIndicators.push('button_disappeared');
+      isLikelySuccessful = true;
+    }
+
+    // 2. Проверяем URL на изменения
+    const currentUrl = window.location.href;
+    if (currentUrl.includes('success') || currentUrl.includes('updated')) {
+      successIndicators.push('success_url_detected');
+      isLikelySuccessful = true;
+    }
+
+    // 3. Проверяем текст страницы на ключевые слова успеха
+    const pageText = document.body.textContent?.toLowerCase() || '';
+    const successKeywords = [
+      'успешно обновлено',
+      'резюме поднято',
+      'поднято в поиске',
+      'обновлено',
+      'успешно',
+      'поднято'
+    ];
+
+    for (const keyword of successKeywords) {
+      if (pageText.includes(keyword)) {
+        successIndicators.push(`keyword_found_${keyword.replace(/\s+/g, '_')}`);
+        isLikelySuccessful = true;
+        break;
+      }
+    }
+
+    // Логируем результат
+    if (isLikelySuccessful) {
+      logger.success('ContentScript', 'Click appears successful', {
+        url: window.location.href,
+        clickMethods: clickResults,
+        successIndicators: successIndicators,
+        buttonStateChange: {
+          textChanged: currentButton?.textContent?.trim() !== initialButtonText,
+          classesChanged: currentButton?.className !== initialButtonClasses,
+          disabledChanged: currentButton?.hasAttribute('disabled') !== initialButtonDisabled
+        }
+      }).catch(() => {});
+      
+      return true;
+    } else {
+      logger.warning('ContentScript', 'Click may have failed - no success indicators detected', {
+        url: window.location.href,
+        clickMethods: clickResults,
+        successIndicators: successIndicators,
+        buttonFound: !!currentButton,
+        buttonText: currentButton?.textContent?.trim()
+      }).catch(() => {});
+      
       return false;
     }
+
   } catch (error) {
     console.error('❌ Failed to click boost button:', error);
     
-    // Логируем критическую ошибку
     logger.critical('ContentScript', 'Failed to click boost button', {
       error: error instanceof Error ? error.message : String(error),
       url: window.location.href,
