@@ -744,7 +744,7 @@ async function clickBoostButton(): Promise<boolean> {
             const indicatorStillPresent = pageTextAfterDelay.includes(indicator);
             const buttonStillInactive = buttonAfterDelay ? !isButtonActive() : false;
             
-            if (indicatorStillPresent || buttonStillInactive) {
+            if (indicatorStillPresent && buttonStillInactive) {
               // Логируем подтвержденный успех
               logger.success('ContentScript', 'Success confirmed after verification delay', {
                 url: window.location.href,
@@ -824,7 +824,7 @@ async function clickBoostButton(): Promise<boolean> {
         (buttonStateChanges > 0 ? 1 : 0) +
         (hasSuccessParams ? 1 : 0);
       
-      const isLikelySuccessful = successScore >= 2;
+      const isLikelySuccessful = successScore >= 3;
       
       // Логируем финальный результат
       if (isLikelySuccessful) {
