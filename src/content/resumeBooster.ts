@@ -481,21 +481,26 @@ async function clickBoostButton(): Promise<boolean> {
 
     // 🎲 ПРОДВИНУТЫЕ МЕТОДЫ КЛИКОВ для обхода защиты
     const clickMethods = [
-      { name: 'pointer_events', weight: isTabActive ? 4 : 2 },      // Самый современный API
-      { name: 'touch_events', weight: isTabActive ? 3 : 2 },        // Обход мобильной защиты
-      { name: 'intersection_click', weight: isTabActive ? 3 : 1 },  // Клик когда видна
-      { name: 'raf_synchronized', weight: isTabActive ? 3 : 1 },    // Синхронизация с браузером
-      { name: 'multi_frame', weight: isTabActive ? 2 : 1 },         // Растянутый клик
+      { name: 'pointer_events', weight: isTabActive ? 8 : 4 },      // МАКСИМАЛЬНЫЙ приоритет
+      { name: 'touch_events', weight: isTabActive ? 7 : 3 },        // ВЫСОКИЙ приоритет  
+      { name: 'intersection_click', weight: isTabActive ? 5 : 2 },    // Средний приоритет
       { name: 'realistic_mouse', weight: isTabActive ? 3 : 1 },     // Старый надежный
       { name: 'direct_click', weight: 2 },                          // Простой клик
       { name: 'keyboard_enter', weight: 2 },                        // Клавиатурный
       { name: 'programmatic_click', weight: 1 }                     // Запасной
     ];
     
-    // Перемешиваем методы случайным образом
+    // Перемешиваем методы случайным образом, но ГАРАНТИРОВАННО включаем новые
     const shuffledMethods = clickMethods
       .sort(() => Math.random() - 0.5)
-      .filter(() => Math.random() > 0.3); // Иногда пропускаем некоторые методы
+      .filter((method) => {
+        // ВСЕГДА включаем pointer_events и touch_events
+        if (method.name === 'pointer_events' || method.name === 'touch_events') {
+          return true;
+        }
+        // Остальные методы включаем с вероятностью 70%
+        return Math.random() > 0.3;
+      });
     
     // Случайная задержка перед началом кликов
     const preClickDelay = Math.random() * 300 + 100;
@@ -704,6 +709,81 @@ async function clickBoostButton(): Promise<boolean> {
           clickSuccess = true;
         } catch (error) {
           clickResults.push(`Touch Events: FAILED - ${error}`);
+        }
+      } else if (method.name === 'intersection_click' && isTabActive) {
+        // 🎯 INTERSECTION OBSERVER CLICK (клик когда элемент точно видим)
+        try {
+          // Проверяем что кнопка действительно видна на экране
+          const rect = button.getBoundingClientRect();
+          const isVisible = rect.top >= 0 && rect.left >= 0 && 
+                           rect.bottom <= window.innerHeight && 
+                           rect.right <= window.innerWidth;
+          
+          if (!isVisible) {
+            // Прокручиваем к кнопке если она не видна
+            button.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
+          }
+          
+          // Создаем Intersection Observer для точного определения видимости
+          const observerPromise = new Promise<boolean>((resolve) => {
+            const observer = new IntersectionObserver((entries) => {
+              const entry = entries[0]; if (!entry) return;
+              if (entry.isIntersecting && entry.intersectionRatio > 0.8) {
+                observer.disconnect();
+                resolve(true);
+              }
+            }, {
+              threshold: [0.8, 0.9, 1.0] // Требуем высокую видимость
+            });
+            
+            observer.observe(button);
+            
+            // Таймаут на случай если observer не сработает
+            setTimeout(() => {
+              observer.disconnect();
+              resolve(false);
+            }, 2000);
+          });
+          
+          const isFullyVisible = await observerPromise;
+          
+          if (isFullyVisible) {
+            // Кнопка полностью видна - выполняем клик
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Имитируем точное наведение на видимую кнопку
+            const preciseMove = new MouseEvent('mousemove', {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+              clientX: centerX,
+              clientY: centerY
+            });
+            document.dispatchEvent(preciseMove);
+            
+            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
+            
+            // Клик с высокой точностью
+            const preciseClick = new MouseEvent('click', {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+              clientX: centerX,
+              clientY: centerY,
+              button: 0,
+              buttons: 1
+            });
+            button.dispatchEvent(preciseClick);
+            
+            clickResults.push('Intersection Click: SUCCESS');
+            clickSuccess = true;
+          } else {
+            clickResults.push('Intersection Click: FAILED - not fully visible');
+          }
+        } catch (error) {
+          clickResults.push(`Intersection Click: FAILED - ${error}`);
         }
       } else if (method.name === 'realistic_mouse' && isTabActive) {
         // Method 1: Реалистичная последовательность событий (только для активных)
