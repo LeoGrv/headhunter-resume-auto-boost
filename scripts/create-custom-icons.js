@@ -9,9 +9,9 @@ if (!fs.existsSync(iconsDir)) {
     fs.mkdirSync(iconsDir, { recursive: true });
 }
 
-console.log('🎨 Creating beautiful full-size icons for Chrome extension...');
+console.log('🎨 Creating MASSIVE full-space icons for Chrome extension...');
 
-// Create beautiful icons that fill the entire space
+// Create icons where elements fill almost the entire space
 function createIcon(size) {
     const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -28,8 +28,8 @@ function createIcon(size) {
       <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
     </linearGradient>
-    <filter id="glow${size}" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+    <filter id="glow${size}" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
       <feMerge> 
         <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -37,37 +37,34 @@ function createIcon(size) {
     </filter>
   </defs>
   
-  <!-- Full background with beautiful gradient -->
-  <rect x="0" y="0" width="${size}" height="${size}" fill="url(#bgGrad${size})" rx="${size/8}"/>
+  <!-- Minimal background - just rounded corners -->
+  <rect x="0" y="0" width="${size}" height="${size}" fill="url(#bgGrad${size})" rx="${size/12}"/>
   
-  <!-- Large central star that fills most of the space -->
+  <!-- MASSIVE star that fills 90% of the space -->
   <g transform="translate(${size/2}, ${size/2})">
-    <path d="M0,${-size*0.35} L${size*0.12},${-size*0.12} L${size*0.35},0 L${size*0.12},${size*0.12} L0,${size*0.35} L${-size*0.12},${size*0.12} L${-size*0.35},0 L${-size*0.12},${-size*0.12} Z" 
-          fill="url(#starGrad${size})" filter="url(#glow${size})"/>
+    <path d="M0,${-size*0.45} L${size*0.15},${-size*0.15} L${size*0.45},0 L${size*0.15},${size*0.15} L0,${size*0.45} L${-size*0.15},${size*0.15} L${-size*0.45},0 L${-size*0.15},${-size*0.15} Z" 
+          fill="url(#starGrad${size})" filter="url(#glow${size})" stroke="rgba(255,255,255,0.8)" stroke-width="1"/>
   </g>
   
-  <!-- Large upward arrow in the center -->
+  <!-- LARGE upward arrow that covers most of the center -->
   <g transform="translate(${size/2}, ${size/2})">
-    <path d="M0,${-size*0.2} L${size*0.15},${-size*0.05} L${size*0.08},${-size*0.05} L${size*0.08},${size*0.15} L${-size*0.08},${size*0.15} L${-size*0.08},${-size*0.05} L${-size*0.15},${-size*0.05} Z" 
-          fill="url(#arrowGrad${size})" filter="url(#glow${size})"/>
+    <path d="M0,${-size*0.25} L${size*0.2},${-size*0.05} L${size*0.12},${-size*0.05} L${size*0.12},${size*0.2} L${-size*0.12},${size*0.2} L${-size*0.12},${-size*0.05} L${-size*0.2},${-size*0.05} Z" 
+          fill="url(#arrowGrad${size})" filter="url(#glow${size})" stroke="rgba(255,255,255,0.9)" stroke-width="1"/>
   </g>
   
-  <!-- Corner accent elements -->
-  <circle cx="${size*0.85}" cy="${size*0.15}" r="${size*0.08}" fill="white" opacity="0.8" filter="url(#glow${size})"/>
-  <circle cx="${size*0.15}" cy="${size*0.85}" r="${size*0.08}" fill="white" opacity="0.8" filter="url(#glow${size})"/>
+  <!-- Minimal corner accents -->
+  <circle cx="${size*0.9}" cy="${size*0.1}" r="${size*0.06}" fill="white" opacity="0.9"/>
+  <circle cx="${size*0.1}" cy="${size*0.9}" r="${size*0.06}" fill="white" opacity="0.9"/>
   
-  <!-- Small decorative stars in corners -->
-  <g transform="translate(${size*0.2}, ${size*0.2})">
-    <path d="M0,${-size*0.06} L${size*0.02},${-size*0.02} L${size*0.06},0 L${size*0.02},${size*0.02} L0,${size*0.06} L${-size*0.02},${size*0.02} L${-size*0.06},0 L${-size*0.02},${-size*0.02} Z" 
-          fill="white" opacity="0.6"/>
+  <!-- Tiny sparkles in corners -->
+  <g transform="translate(${size*0.15}, ${size*0.15})">
+    <path d="M0,${-size*0.04} L${size*0.015},${-size*0.015} L${size*0.04},0 L${size*0.015},${size*0.015} L0,${size*0.04} L${-size*0.015},${size*0.015} L${-size*0.04},0 L${-size*0.015},${-size*0.015} Z" 
+          fill="white" opacity="0.8"/>
   </g>
-  <g transform="translate(${size*0.8}, ${size*0.8})">
-    <path d="M0,${-size*0.06} L${size*0.02},${-size*0.02} L${size*0.06},0 L${size*0.02},${size*0.02} L0,${size*0.06} L${-size*0.02},${size*0.02} L${-size*0.06},0 L${-size*0.02},${-size*0.02} Z" 
-          fill="white" opacity="0.6"/>
+  <g transform="translate(${size*0.85}, ${size*0.85})">
+    <path d="M0,${-size*0.04} L${size*0.015},${-size*0.015} L${size*0.04},0 L${size*0.015},${size*0.015} L0,${size*0.04} L${-size*0.015},${size*0.015} L${-size*0.04},0 L${-size*0.015},${-size*0.015} Z" 
+          fill="white" opacity="0.8"/>
   </g>
-  
-  <!-- Subtle border for definition -->
-  <rect x="1" y="1" width="${size-2}" height="${size-2}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" rx="${size/8-1}"/>
 </svg>`;
 
     return svg;
@@ -82,44 +79,44 @@ sizes.forEach(size => {
     const filepath = path.join(iconsDir, filename);
     
     fs.writeFileSync(filepath, svg);
-    console.log(`✅ Created ${filename} (${size}x${size})`);
+    console.log(`✅ Created ${filename} (${size}x${size}) - MASSIVE ELEMENTS`);
 });
 
-console.log('\n🎉 Beautiful full-size icons created successfully!');
+console.log('\n🎉 MASSIVE full-space icons created successfully!');
 
 // Create README for icons
-const readme = `# Chrome Extension Icons - Full Size Beautiful Version
+const readme = `# Chrome Extension Icons - MASSIVE Full-Space Version
 
 ## Design Features
-- **Full-size design**: Icons fill the entire space with no wasted area
-- **Beautiful gradient background**: Purple to pink gradient for modern look
-- **Large central star**: Prominent boost symbol with warm gradient
-- **Bold arrow**: Clear upward pointing arrow with blue gradient
-- **Corner accents**: White circles and small stars for visual interest
-- **Subtle glow effects**: Soft lighting for premium appearance
-- **Rounded corners**: Modern app-like appearance
+- **MASSIVE elements**: Star fills 90% of icon space, arrow covers most of center
+- **Minimal background**: Just rounded corners, elements dominate the space
+- **Huge central star**: Takes up almost the entire icon area
+- **Large arrow**: Prominent upward pointing arrow covering center
+- **Minimal accents**: Small corner elements that don't distract
+- **White outlines**: Ensure elements stand out clearly
+- **Maximum visibility**: Elements are as large as possible
 
 ## Color Palette
-- Background: #667eea → #764ba2 → #f093fb (Purple to Pink)
-- Star: #ffecd2 → #fcb69f (Warm Orange)
-- Arrow: #4facfe → #00f2fe (Blue Cyan)
-- Accents: White with various opacities
+- Background: #667eea → #764ba2 → #f093fb (Purple to Pink) - MINIMAL
+- Star: #ffecd2 → #fcb69f (Warm Orange) - MASSIVE
+- Arrow: #4facfe → #00f2fe (Blue Cyan) - LARGE
+- Accents: White with high opacity - SMALL
 
 ## Sizes Generated
-- 16x16px (toolbar) - Simplified for small size
-- 32x32px (extension management)
-- 48x48px (extension details)
-- 128x128px (Chrome Web Store)
+- 16x16px (toolbar) - Massive star dominates
+- 32x32px (extension management) - Large elements
+- 48x48px (extension details) - Full-space design
+- 128x128px (Chrome Web Store) - Maximum impact
 
-These icons are designed to be highly visible, fill the entire icon space, and look beautiful in Chrome.
+These icons prioritize element size over background, ensuring maximum visibility.
 `;
 
 fs.writeFileSync(path.join(iconsDir, 'README.md'), readme);
-console.log('📚 Created README.md with icon documentation');
+console.log('📚 Created README.md with MASSIVE icon documentation');
 
-console.log('\n🎨 These beautiful full-size icons should look amazing in Chrome!');
+console.log('\n🎨 These MASSIVE icons should dominate the entire space!');
 console.log('Key improvements:');
-console.log('- Icons now fill the entire space');
-console.log('- Larger, more prominent elements');
-console.log('- Beautiful gradients and glow effects');
-console.log('- Modern rounded rectangle design'); 
+console.log('- Star now fills 90% of the icon space');
+console.log('- Arrow is much larger and more prominent');
+console.log('- Background is minimal, elements dominate');
+console.log('- White outlines for maximum contrast'); 

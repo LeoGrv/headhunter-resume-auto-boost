@@ -1,6 +1,6 @@
 {
   "name": "hh-resume-booster",
-  "version": "1.2.54",
+  "version": "1.2.56",
   "description": "Автоматическое поднятие резюме на HeadHunter",
   "main": "dist/background/serviceWorker.js",
   "scripts": {
@@ -33,8 +33,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" \"tests/**/*.{ts,tsx,js,jsx,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" \"tests/**/*.{ts,tsx,js,jsx,json}\"",
     "lint:ci": "npm run lint && npm run format:check",
-    "create-icons": "node scripts/create-custom-icons.js && ./scripts/convert-svg-to-png.sh",
-    "prebuild": "npm run create-icons"
+    "create-icons": "node scripts/create-custom-icons.js && ./scripts/convert-svg-to-png.sh"
   },
   "keywords": [
     "chrome-extension",

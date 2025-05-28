@@ -13,8 +13,8 @@
       <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
     </linearGradient>
-    <filter id="glow128" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+    <filter id="glow128" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
       <feMerge> 
         <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -22,35 +22,32 @@
     </filter>
   </defs>
   
-  <!-- Full background with beautiful gradient -->
-  <rect x="0" y="0" width="128" height="128" fill="url(#bgGrad128)" rx="16"/>
+  <!-- Minimal background - just rounded corners -->
+  <rect x="0" y="0" width="128" height="128" fill="url(#bgGrad128)" rx="10.666666666666666"/>
   
-  <!-- Large central star that fills most of the space -->
+  <!-- MASSIVE star that fills 90% of the space -->
   <g transform="translate(64, 64)">
-    <path d="M0,-44.8 L15.36,-15.36 L44.8,0 L15.36,15.36 L0,44.8 L-15.36,15.36 L-44.8,0 L-15.36,-15.36 Z" 
-          fill="url(#starGrad128)" filter="url(#glow128)"/>
+    <path d="M0,-57.6 L19.2,-19.2 L57.6,0 L19.2,19.2 L0,57.6 L-19.2,19.2 L-57.6,0 L-19.2,-19.2 Z" 
+          fill="url(#starGrad128)" filter="url(#glow128)" stroke="rgba(255,255,255,0.8)" stroke-width="1"/>
   </g>
   
-  <!-- Large upward arrow in the center -->
+  <!-- LARGE upward arrow that covers most of the center -->
   <g transform="translate(64, 64)">
-    <path d="M0,-25.6 L19.2,-6.4 L10.24,-6.4 L10.24,19.2 L-10.24,19.2 L-10.24,-6.4 L-19.2,-6.4 Z" 
-          fill="url(#arrowGrad128)" filter="url(#glow128)"/>
+    <path d="M0,-32 L25.6,-6.4 L15.36,-6.4 L15.36,25.6 L-15.36,25.6 L-15.36,-6.4 L-25.6,-6.4 Z" 
+          fill="url(#arrowGrad128)" filter="url(#glow128)" stroke="rgba(255,255,255,0.9)" stroke-width="1"/>
   </g>
   
-  <!-- Corner accent elements -->
-  <circle cx="108.8" cy="19.2" r="10.24" fill="white" opacity="0.8" filter="url(#glow128)"/>
-  <circle cx="19.2" cy="108.8" r="10.24" fill="white" opacity="0.8" filter="url(#glow128)"/>
+  <!-- Minimal corner accents -->
+  <circle cx="115.2" cy="12.8" r="7.68" fill="white" opacity="0.9"/>
+  <circle cx="12.8" cy="115.2" r="7.68" fill="white" opacity="0.9"/>
   
-  <!-- Small decorative stars in corners -->
-  <g transform="translate(25.6, 25.6)">
-    <path d="M0,-7.68 L2.56,-2.56 L7.68,0 L2.56,2.56 L0,7.68 L-2.56,2.56 L-7.68,0 L-2.56,-2.56 Z" 
-          fill="white" opacity="0.6"/>
+  <!-- Tiny sparkles in corners -->
+  <g transform="translate(19.2, 19.2)">
+    <path d="M0,-5.12 L1.92,-1.92 L5.12,0 L1.92,1.92 L0,5.12 L-1.92,1.92 L-5.12,0 L-1.92,-1.92 Z" 
+          fill="white" opacity="0.8"/>
   </g>
-  <g transform="translate(102.4, 102.4)">
-    <path d="M0,-7.68 L2.56,-2.56 L7.68,0 L2.56,2.56 L0,7.68 L-2.56,2.56 L-7.68,0 L-2.56,-2.56 Z" 
-          fill="white" opacity="0.6"/>
+  <g transform="translate(108.8, 108.8)">
+    <path d="M0,-5.12 L1.92,-1.92 L5.12,0 L1.92,1.92 L0,5.12 L-1.92,1.92 L-5.12,0 L-1.92,-1.92 Z" 
+          fill="white" opacity="0.8"/>
   </g>
-  
-  <!-- Subtle border for definition -->
-  <rect x="1" y="1" width="126" height="126" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" rx="15"/>
 </svg>
