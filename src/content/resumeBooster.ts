@@ -496,6 +496,17 @@ async function clickBoostButton(): Promise<boolean> {
     const preClickDelay = Math.random() * 300 + 100;
     await new Promise(resolve => setTimeout(resolve, preClickDelay));
 
+    // 🔍 ДИАГНОСТИКА: Логируем начальное состояние
+    logger.warning('ContentScript', 'DIAGNOSTIC: Starting click sequence', {
+      url: window.location.href,
+      buttonText: button.textContent?.trim(),
+      buttonClasses: button.className,
+      buttonDisabled: button.hasAttribute('disabled'),
+      buttonAriaDisabled: button.getAttribute('aria-disabled'),
+      shuffledMethods: shuffledMethods.map(m => m.name),
+      tabActive: isTabActive
+    }).catch(() => {});
+
     for (const method of shuffledMethods) {
       // Случайная задержка между методами
       const methodDelay = Math.random() * 200 + 50;
@@ -656,6 +667,26 @@ async function clickBoostButton(): Promise<boolean> {
     console.log('📊 Click attempt summary:', clickResults);
 
     if (clickSuccess) {
+      // 🔍 ДИАГНОСТИКА: Логируем состояние после кликов
+      const postClickButton = findBoostButton();
+      const postClickActive = postClickButton ? isButtonActive() : false;
+      const postClickPageText = document.body.textContent?.toLowerCase() || '';
+      
+      logger.warning('ContentScript', 'DIAGNOSTIC: Post-click state', {
+        url: window.location.href,
+        clickResults: clickResults,
+        postClickButtonFound: !!postClickButton,
+        postClickButtonActive: postClickActive,
+        postClickButtonText: postClickButton?.textContent?.trim(),
+        postClickButtonClasses: postClickButton?.className,
+        pageTextLength: postClickPageText.length,
+        hasSuccessKeywords: {
+          успешно: postClickPageText.includes('успешно'),
+          обновлено: postClickPageText.includes('обновлено'),
+          поднято: postClickPageText.includes('поднято')
+        }
+      }).catch(() => {});
+
       // Логируем успешный клик с детальной аналитикой
       logger.success('ContentScript', 'Button click attempts completed', {
         url: window.location.href,
@@ -826,7 +857,45 @@ async function clickBoostButton(): Promise<boolean> {
       
       const isLikelySuccessful = successScore >= 3;
       
-      // Логируем финальный результат
+      // 🔍 ДИАГНОСТИКА: Детальная финальная проверка
+      logger.warning('ContentScript', 'DIAGNOSTIC: Final analysis details', {
+        url: window.location.href,
+        finalButton: {
+          found: !!finalButton,
+          active: finalButtonActive,
+          text: finalButton?.textContent?.trim(),
+          classes: finalButton?.className,
+          disabled: finalButton?.hasAttribute('disabled'),
+          ariaDisabled: finalButton?.getAttribute('aria-disabled')
+        },
+        pageAnalysis: {
+          textLength: finalPageText.length,
+          hasSuccessKeywords: {
+            успешно: finalPageText.includes('успешно'),
+            обновлено: finalPageText.includes('обновлено'),
+            поднято: finalPageText.includes('поднято'),
+            'резюме обновлено': finalPageText.includes('резюме обновлено'),
+            'резюме поднято': finalPageText.includes('резюме поднято'),
+            'поднято в поиске': finalPageText.includes('поднято в поиске')
+          }
+        },
+        scoring: {
+          foundAdditionalIndicators: foundAdditionalIndicators,
+          successIndicatorsFound: successIndicatorsFound,
+          finalButtonActive: finalButtonActive,
+          buttonStateChanges: buttonStateChanges,
+          hasSuccessParams: hasSuccessParams,
+          successScore: successScore,
+          threshold: 3,
+          isLikelySuccessful: isLikelySuccessful
+        },
+        urlInfo: {
+          current: window.location.href,
+          urlChanged: urlChanged,
+          hasSuccessParams: hasSuccessParams
+        }
+      }).catch(() => {});
+      
       if (isLikelySuccessful) {
         logger.success('ContentScript', 'Final analysis indicates likely success', {
           url: window.location.href,
