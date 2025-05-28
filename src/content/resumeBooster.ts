@@ -855,7 +855,11 @@ async function clickBoostButton(): Promise<boolean> {
         (buttonStateChanges > 0 ? 1 : 0) +
         (hasSuccessParams ? 1 : 0);
       
-      const isLikelySuccessful = successScore >= 3;
+      // 🚨 КРИТИЧЕСКАЯ ПРОВЕРКА: если кнопка вернулась в активное состояние после изменений - это rollback!
+      const rollbackDetected = buttonStateChanges > 0 && finalButtonActive;
+      
+      // Если rollback детектирован - это автоматически провал, независимо от других индикаторов
+      const isLikelySuccessful = !rollbackDetected && successScore >= 3;
       
       // 🔍 ДИАГНОСТИКА: Детальная финальная проверка
       logger.warning('ContentScript', 'DIAGNOSTIC: Final analysis details', {
@@ -885,6 +889,7 @@ async function clickBoostButton(): Promise<boolean> {
           finalButtonActive: finalButtonActive,
           buttonStateChanges: buttonStateChanges,
           hasSuccessParams: hasSuccessParams,
+          rollbackDetected: rollbackDetected,
           successScore: successScore,
           threshold: 3,
           isLikelySuccessful: isLikelySuccessful
@@ -905,6 +910,7 @@ async function clickBoostButton(): Promise<boolean> {
           finalButtonActive: finalButtonActive,
           buttonStateChanges: buttonStateChanges,
           hasSuccessParams: hasSuccessParams,
+          rollbackDetected: rollbackDetected,
           urlChanged: urlChanged,
           simulationType: isTabActive ? 'full' : 'lightweight',
           detectionMethod: 'comprehensive_analysis'
@@ -912,7 +918,7 @@ async function clickBoostButton(): Promise<boolean> {
         
         return true;
       } else {
-        logger.error('ContentScript', 'Final analysis indicates likely failure', {
+        logger.warning('ContentScript', 'Final analysis indicates likely failure', {
           url: window.location.href,
           successScore: successScore,
           foundAdditionalIndicators: foundAdditionalIndicators,
@@ -920,10 +926,10 @@ async function clickBoostButton(): Promise<boolean> {
           finalButtonActive: finalButtonActive,
           buttonStateChanges: buttonStateChanges,
           hasSuccessParams: hasSuccessParams,
+          rollbackDetected: rollbackDetected,
           urlChanged: urlChanged,
           simulationType: isTabActive ? 'full' : 'lightweight',
-          detectionMethod: 'comprehensive_analysis',
-          reason: 'insufficient_success_indicators'
+          detectionMethod: rollbackDetected ? 'rollback_failure' : 'comprehensive_analysis'
         }).catch(() => {});
         
         return false;
