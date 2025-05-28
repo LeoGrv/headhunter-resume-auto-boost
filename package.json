@@ -1,7 +1,7 @@
 {
-  "name": "headhunter-resume-auto-boost",
-  "version": "1.2.23",
-  "description": "Chrome extension for automatically boosting HeadHunter resumes in search results",
+  "name": "hh-resume-booster",
+  "version": "1.2.25",
+  "description": "Автоматическое поднятие резюме на HeadHunter",
   "main": "dist/background/serviceWorker.js",
   "scripts": {
     "version:patch": "node scripts/bump-version.js patch",

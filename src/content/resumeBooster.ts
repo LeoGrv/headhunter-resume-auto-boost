@@ -277,109 +277,132 @@ async function clickBoostButton(): Promise<boolean> {
       offsetParent: !!button.offsetParent
     });
 
-    // 🤖 ИМИТАЦИЯ ЧЕЛОВЕЧЕСКОГО ПОВЕДЕНИЯ
-    console.log('🤖 Simulating human behavior before click...');
-    
-    // 1. Случайная задержка перед действием (как человек думает)
-    const thinkingDelay = Math.random() * 1000 + 500; // 0.5-1.5 сек
-    await new Promise(resolve => setTimeout(resolve, thinkingDelay));
-    
-    // 2. Движение мыши к кнопке (имитация наведения)
-    const rect = button.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    // Создаем события движения мыши
-    const mouseMoveEvent = new MouseEvent('mousemove', {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-      clientX: centerX,
-      clientY: centerY
-    });
-    document.dispatchEvent(mouseMoveEvent);
-    
-    // 3. Наведение на кнопку
-    const mouseEnterEvent = new MouseEvent('mouseenter', {
-      bubbles: false,
-      cancelable: true,
-      view: window,
-      clientX: centerX,
-      clientY: centerY
-    });
-    button.dispatchEvent(mouseEnterEvent);
-    
-    // 4. Hover эффект
-    const mouseOverEvent = new MouseEvent('mouseover', {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-      clientX: centerX,
-      clientY: centerY
-    });
-    button.dispatchEvent(mouseOverEvent);
-    
-    // 5. Пауза на hover (как человек читает кнопку)
-    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+    // 🔍 Детекция активности вкладки
+    const isTabActive = !document.hidden && document.visibilityState === 'visible';
+    console.log(`🔍 Tab activity status: ${isTabActive ? 'ACTIVE' : 'BACKGROUND'}`);
 
-    // Scroll button into view (плавно, как человек)
-    button.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 🤖 ИМИТАЦИЯ ЧЕЛОВЕЧЕСКОГО ПОВЕДЕНИЯ (только для активных вкладок)
+    if (isTabActive) {
+      console.log('🤖 Simulating human behavior for active tab...');
+      
+      // 1. Случайная задержка перед действием (как человек думает)
+      const thinkingDelay = Math.random() * 1000 + 500; // 0.5-1.5 сек
+      await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+      
+      // 2. Движение мыши к кнопке (имитация наведения)
+      const rect = button.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Создаем события движения мыши
+      const mouseMoveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: centerX,
+        clientY: centerY
+      });
+      document.dispatchEvent(mouseMoveEvent);
+      
+      // 3. Наведение на кнопку
+      const mouseEnterEvent = new MouseEvent('mouseenter', {
+        bubbles: false,
+        cancelable: true,
+        view: window,
+        clientX: centerX,
+        clientY: centerY
+      });
+      button.dispatchEvent(mouseEnterEvent);
+      
+      // 4. Hover эффект
+      const mouseOverEvent = new MouseEvent('mouseover', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: centerX,
+        clientY: centerY
+      });
+      button.dispatchEvent(mouseOverEvent);
+      
+      // 5. Пауза на hover (как человек читает кнопку)
+      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
 
-    // Wait for scroll to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+      // Scroll button into view (плавно, как человек)
+      button.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // 6. Focus на кнопку (как при Tab навигации)
-    try {
-      button.focus();
-      await new Promise(resolve => setTimeout(resolve, 100));
-    } catch (e) {
-      console.warn('Focus failed:', e);
+      // Wait for scroll to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 6. Focus на кнопку (как при Tab навигации)
+      try {
+        button.focus();
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (e) {
+        console.warn('Focus failed:', e);
+      }
+
+      console.log('🤖 Human simulation complete, starting click sequence...');
+    } else {
+      console.log('⚡ Background tab detected - using fast click mode...');
+      
+      // Для неактивных вкладок - быстрый режим без имитации
+      try {
+        button.scrollIntoView({ behavior: 'auto', block: 'center' });
+        await new Promise(resolve => setTimeout(resolve, 100)); // Минимальная задержка
+      } catch (e) {
+        console.warn('Scroll failed in background:', e);
+      }
     }
-
-    console.log('🤖 Human simulation complete, starting click sequence...');
 
     // Try multiple click methods for better compatibility
     let clickSuccess = false;
     const clickResults: string[] = [];
 
-    // Method 1: Realistic mouse click sequence
-    try {
-      // Более реалистичная последовательность событий мыши
-      const mouseEvents = [
-        { type: 'mousedown', delay: 0 },
-        { type: 'mouseup', delay: 50 + Math.random() * 100 }, // Человеческая задержка
-        { type: 'click', delay: 10 }
-      ];
+    if (isTabActive) {
+      // Method 1: Realistic mouse click sequence (только для активных вкладок)
+      try {
+        const rect = button.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Более реалистичная последовательность событий мыши
+        const mouseEvents = [
+          { type: 'mousedown', delay: 0 },
+          { type: 'mouseup', delay: 50 + Math.random() * 100 }, // Человеческая задержка
+          { type: 'click', delay: 10 }
+        ];
 
-      for (const eventConfig of mouseEvents) {
-        await new Promise(resolve => setTimeout(resolve, eventConfig.delay));
+        for (const eventConfig of mouseEvents) {
+          await new Promise(resolve => setTimeout(resolve, eventConfig.delay));
+          
+          const event = new MouseEvent(eventConfig.type, {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            button: 0,
+            buttons: eventConfig.type === 'mousedown' ? 1 : 0,
+            clientX: centerX + (Math.random() - 0.5) * 2, // Небольшой джиттер
+            clientY: centerY + (Math.random() - 0.5) * 2,
+            screenX: centerX + window.screenX,
+            screenY: centerY + window.screenY
+          });
+          
+          button.dispatchEvent(event);
+        }
         
-        const event = new MouseEvent(eventConfig.type, {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          button: 0,
-          buttons: eventConfig.type === 'mousedown' ? 1 : 0,
-          clientX: centerX + (Math.random() - 0.5) * 2, // Небольшой джиттер
-          clientY: centerY + (Math.random() - 0.5) * 2,
-          screenX: centerX + window.screenX,
-          screenY: centerY + window.screenY
-        });
-        
-        button.dispatchEvent(event);
+        console.log('✅ Method 1: Realistic mouse sequence executed');
+        clickResults.push('Realistic mouse: SUCCESS');
+        clickSuccess = true;
+      } catch (error) {
+        console.warn('❌ Method 1 failed:', error);
+        clickResults.push(`Realistic mouse: FAILED - ${error}`);
       }
-      
-      console.log('✅ Method 1: Realistic mouse sequence executed');
-      clickResults.push('Realistic mouse: SUCCESS');
-      clickSuccess = true;
-    } catch (error) {
-      console.warn('❌ Method 1 failed:', error);
-      clickResults.push(`Realistic mouse: FAILED - ${error}`);
     }
 
-    // Method 2: Direct click with human timing
+    // Method 2: Direct click (работает в любых вкладках)
     try {
-      await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+      const delay = isTabActive ? (100 + Math.random() * 200) : 50; // Быстрее для фоновых
+      await new Promise(resolve => setTimeout(resolve, delay));
       button.click();
       console.log('✅ Method 2: Direct click executed');
       clickResults.push('Direct click: SUCCESS');
@@ -389,9 +412,10 @@ async function clickBoostButton(): Promise<boolean> {
       clickResults.push(`Direct click: FAILED - ${error}`);
     }
 
-    // Method 3: Keyboard activation (Enter) - более человечно
+    // Method 3: Keyboard activation (работает в любых вкладках)
     try {
-      await new Promise(resolve => setTimeout(resolve, 50));
+      const delay = isTabActive ? 50 : 10; // Быстрее для фоновых
+      await new Promise(resolve => setTimeout(resolve, delay));
       
       const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
@@ -432,11 +456,14 @@ async function clickBoostButton(): Promise<boolean> {
         url: window.location.href,
         buttonText: button.textContent?.trim(),
         methods: clickResults,
-        humanSimulation: true
+        humanSimulation: isTabActive,
+        tabActive: isTabActive
       }).catch(() => {});
       
-      // Wait longer to see if the page responds (увеличил время)
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Адаптивное время ожидания
+      const waitTime = isTabActive ? 5000 : 2000; // Меньше для фоновых вкладок
+      console.log(`⏱️ Waiting ${waitTime}ms for page response...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
       
       // Check if button state changed (might be disabled after click)
       const buttonAfterClick = findBoostButton();
