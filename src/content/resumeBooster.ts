@@ -483,7 +483,9 @@ async function clickBoostButton(): Promise<boolean> {
     const clickMethods = [
       { name: 'pointer_events', weight: isTabActive ? 8 : 4 },      // МАКСИМАЛЬНЫЙ приоритет
       { name: 'touch_events', weight: isTabActive ? 7 : 3 },        // ВЫСОКИЙ приоритет  
+      { name: 'multi_frame', weight: isTabActive ? 6 : 3 },         // ЯДЕРНАЯ ОПЦИЯ
       { name: 'intersection_click', weight: isTabActive ? 5 : 2 },    // Средний приоритет
+      { name: 'raf_synchronized', weight: isTabActive ? 4 : 2 },     // RAF синхронизация
       { name: 'realistic_mouse', weight: isTabActive ? 3 : 1 },     // Старый надежный
       { name: 'direct_click', weight: 2 },                          // Простой клик
       { name: 'keyboard_enter', weight: 2 },                        // Клавиатурный
@@ -494,12 +496,15 @@ async function clickBoostButton(): Promise<boolean> {
     const shuffledMethods = clickMethods
       .sort(() => Math.random() - 0.5)
       .filter((method) => {
-        // ВСЕГДА включаем pointer_events и touch_events
-        if (method.name === 'pointer_events' || method.name === 'touch_events') {
+        // ВСЕГДА включаем ЯДЕРНЫЕ ОПЦИИ
+        if (method.name === 'pointer_events' || 
+            method.name === 'touch_events' || 
+            method.name === 'multi_frame' || 
+            method.name === 'raf_synchronized') {
           return true;
         }
-        // Остальные методы включаем с вероятностью 70%
-        return Math.random() > 0.3;
+        // Остальные методы включаем с вероятностью 80%
+        return Math.random() > 0.2;
       });
     
     // Случайная задержка перед началом кликов
@@ -710,6 +715,94 @@ async function clickBoostButton(): Promise<boolean> {
         } catch (error) {
           clickResults.push(`Touch Events: FAILED - ${error}`);
         }
+      } else if (method.name === 'multi_frame') {
+        // 🚀 MULTI-FRAME CLICK (ЯДЕРНАЯ ОПЦИЯ - растянутый клик через несколько фреймов)
+        try {
+          const rect = button.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          let frameCount = 0;
+          const maxFrames = 5;
+          let clickExecuted = false;
+          
+          const frameClickPromise = new Promise<boolean>((resolve) => {
+            const executeFrameClick = () => {
+              frameCount++;
+              
+              try {
+                switch (frameCount) {
+                  case 1:
+                    // Frame 1: Подготовка
+                    button.dispatchEvent(new MouseEvent('mouseover', {
+                      bubbles: true, cancelable: true, view: window,
+                      clientX: centerX, clientY: centerY
+                    }));
+                    break;
+                    
+                  case 2:
+                    // Frame 2: Фокус
+                    button.focus();
+                    button.dispatchEvent(new FocusEvent('focus', {
+                      bubbles: true, cancelable: true, view: window
+                    }));
+                    break;
+                    
+                  case 3:
+                    // Frame 3: MouseDown
+                    button.dispatchEvent(new MouseEvent('mousedown', {
+                      bubbles: true, cancelable: true, view: window,
+                      clientX: centerX, clientY: centerY, button: 0, buttons: 1
+                    }));
+                    break;
+                    
+                  case 4:
+                    // Frame 4: Click
+                    button.dispatchEvent(new MouseEvent('click', {
+                      bubbles: true, cancelable: true, view: window,
+                      clientX: centerX, clientY: centerY, button: 0, buttons: 0
+                    }));
+                    break;
+                    
+                  case 5:
+                    // Frame 5: MouseUp + Native Click
+                    button.dispatchEvent(new MouseEvent('mouseup', {
+                      bubbles: true, cancelable: true, view: window,
+                      clientX: centerX, clientY: centerY, button: 0, buttons: 0
+                    }));
+                    button.click(); // Финальный native клик
+                    clickExecuted = true;
+                    resolve(true);
+                    return;
+                }
+                
+                // Продолжаем в следующем фрейме
+                if (frameCount < maxFrames) {
+                  requestAnimationFrame(executeFrameClick);
+                } else {
+                  resolve(false);
+                }
+              } catch (error) {
+                resolve(false);
+              }
+            };
+            
+            // Начинаем выполнение
+            requestAnimationFrame(executeFrameClick);
+          });
+          
+          // Ждем завершения multi-frame клика
+          const success = await frameClickPromise;
+          
+          if (success && clickExecuted) {
+            clickResults.push('Multi-Frame: SUCCESS (5 frames executed)');
+            clickSuccess = true;
+          } else {
+            clickResults.push(`Multi-Frame: FAILED (${frameCount} frames executed)`);
+          }
+        } catch (error) {
+          clickResults.push(`Multi-Frame: FAILED - ${error}`);
+        }
       } else if (method.name === 'intersection_click' && isTabActive) {
         // 🎯 INTERSECTION OBSERVER CLICK (клик когда элемент точно видим)
         try {
@@ -784,6 +877,119 @@ async function clickBoostButton(): Promise<boolean> {
           }
         } catch (error) {
           clickResults.push(`Intersection Click: FAILED - ${error}`);
+        }
+      } else if (method.name === 'raf_synchronized') {
+        // 🚀 RAF SYNCHRONIZED CLICK (ЯДЕРНАЯ ОПЦИЯ - синхронизация с браузером)
+        try {
+          let clickExecuted = false;
+          
+          // Настраиваем MutationObserver для детекции изменений кнопки
+          const mutationPromise = new Promise<boolean>((resolve) => {
+            const observer = new MutationObserver((mutations) => {
+              for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && 
+                    mutation.target === button &&
+                    (mutation.attributeName === 'disabled' || 
+                     mutation.attributeName === 'class')) {
+                  observer.disconnect();
+                  resolve(true);
+                  break;
+                }
+              }
+            });
+            
+            observer.observe(button, {
+              attributes: true,
+              attributeFilter: ['disabled', 'class', 'aria-disabled']
+            });
+            
+            // Таймаут для observer
+            setTimeout(() => {
+              observer.disconnect();
+              resolve(false);
+            }, 3000);
+          });
+          
+          // Выполняем клик синхронно с RAF (максимальная точность)
+          const rafClickPromise = new Promise<boolean>((resolve) => {
+            const performClick = () => {
+              if (clickExecuted) return;
+              clickExecuted = true;
+              
+              try {
+                const rect = button.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // МУЛЬТИПЛЕКСНЫЙ КЛИК - все события в одном RAF цикле
+                
+                // 1. MouseDown
+                button.dispatchEvent(new MouseEvent('mousedown', {
+                  bubbles: true, cancelable: true, view: window,
+                  clientX: centerX, clientY: centerY, button: 0, buttons: 1
+                }));
+                
+                // 2. Focus
+                button.focus();
+                
+                // 3. PointerDown (современный API)
+                button.dispatchEvent(new PointerEvent('pointerdown', {
+                  bubbles: true, cancelable: true, view: window,
+                  pointerId: 1, pointerType: 'mouse',
+                  clientX: centerX, clientY: centerY, pressure: 0.8, button: 0, buttons: 1
+                }));
+                
+                // 4. Click
+                button.dispatchEvent(new MouseEvent('click', {
+                  bubbles: true, cancelable: true, view: window,
+                  clientX: centerX, clientY: centerY, button: 0, buttons: 0
+                }));
+                
+                // 5. PointerUp
+                button.dispatchEvent(new PointerEvent('pointerup', {
+                  bubbles: true, cancelable: true, view: window,
+                  pointerId: 1, pointerType: 'mouse',
+                  clientX: centerX, clientY: centerY, pressure: 0, button: 0, buttons: 0
+                }));
+                
+                // 6. MouseUp
+                button.dispatchEvent(new MouseEvent('mouseup', {
+                  bubbles: true, cancelable: true, view: window,
+                  clientX: centerX, clientY: centerY, button: 0, buttons: 0
+                }));
+                
+                // 7. Native click как финальный удар
+                button.click();
+                
+                resolve(true);
+              } catch (error) {
+                resolve(false);
+              }
+            };
+            
+            // Двойной RAF для максимальной синхронизации
+            requestAnimationFrame(() => {
+              requestAnimationFrame(performClick);
+            });
+          });
+          
+          // Ждем результат клика И мутации
+          const [rafResult, mutationResult] = await Promise.all([
+            rafClickPromise,
+            mutationPromise
+          ]);
+          
+          if (rafResult && mutationResult) {
+            clickResults.push('RAF Synchronized: SUCCESS (click + mutation detected)');
+            clickSuccess = true;
+          } else if (rafResult) {
+            clickResults.push('RAF Synchronized: PARTIAL (click executed)');
+            clickSuccess = true;
+          } else {
+            clickResults.push('RAF Synchronized: FAILED');
+          }
+        } catch (error) {
+          clickResults.push(`RAF Synchronized: FAILED - ${error}`);
         }
       } else if (method.name === 'realistic_mouse' && isTabActive) {
         // Method 1: Реалистичная последовательность событий (только для активных)
