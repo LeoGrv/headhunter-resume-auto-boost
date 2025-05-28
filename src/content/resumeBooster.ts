@@ -481,23 +481,29 @@ async function clickBoostButton(): Promise<boolean> {
 
     // 🎲 ПРОДВИНУТЫЕ МЕТОДЫ КЛИКОВ для обхода защиты
     const clickMethods = [
-      { name: 'pointer_events', weight: isTabActive ? 8 : 4 },      // МАКСИМАЛЬНЫЙ приоритет
-      { name: 'touch_events', weight: isTabActive ? 7 : 3 },        // ВЫСОКИЙ приоритет  
-      { name: 'multi_frame', weight: isTabActive ? 6 : 3 },         // ЯДЕРНАЯ ОПЦИЯ
-      { name: 'intersection_click', weight: isTabActive ? 5 : 2 },    // Средний приоритет
-      { name: 'raf_synchronized', weight: isTabActive ? 4 : 2 },     // RAF синхронизация
-      { name: 'realistic_mouse', weight: isTabActive ? 3 : 1 },     // Старый надежный
-      { name: 'direct_click', weight: 2 },                          // Простой клик
-      { name: 'keyboard_enter', weight: 2 },                        // Клавиатурный
-      { name: 'programmatic_click', weight: 1 }                     // Запасной
+      { name: 'stealth_injection', weight: isTabActive ? 10 : 5 },      // ULTIMATE STEALTH
+      { name: 'dom_manipulation', weight: isTabActive ? 9 : 4 },        // DOM HACKING
+      { name: 'event_hijacking', weight: isTabActive ? 8 : 4 },         // EVENT HIJACKING
+      { name: 'pointer_events', weight: isTabActive ? 8 : 4 },          // МАКСИМАЛЬНЫЙ приоритет
+      { name: 'touch_events', weight: isTabActive ? 7 : 3 },            // ВЫСОКИЙ приоритет  
+      { name: 'multi_frame', weight: isTabActive ? 6 : 3 },             // ЯДЕРНАЯ ОПЦИЯ
+      { name: 'intersection_click', weight: isTabActive ? 5 : 2 },      // Средний приоритет
+      { name: 'raf_synchronized', weight: isTabActive ? 4 : 2 },        // RAF синхронизация
+      { name: 'realistic_mouse', weight: isTabActive ? 3 : 1 },         // Старый надежный
+      { name: 'direct_click', weight: 2 },                              // Простой клик
+      { name: 'keyboard_enter', weight: 2 },                            // Клавиатурный
+      { name: 'programmatic_click', weight: 1 }                         // Запасной
     ];
     
     // Перемешиваем методы случайным образом, но ГАРАНТИРОВАННО включаем новые
     const shuffledMethods = clickMethods
       .sort(() => Math.random() - 0.5)
       .filter((method) => {
-        // ВСЕГДА включаем ЯДЕРНЫЕ ОПЦИИ
-        if (method.name === 'pointer_events' || 
+        // ВСЕГДА включаем ULTIMATE STEALTH ОПЦИИ
+        if (method.name === 'stealth_injection' || 
+            method.name === 'dom_manipulation' || 
+            method.name === 'event_hijacking' ||
+            method.name === 'pointer_events' || 
             method.name === 'touch_events' || 
             method.name === 'multi_frame' || 
             method.name === 'raf_synchronized') {
@@ -990,6 +996,249 @@ async function clickBoostButton(): Promise<boolean> {
           }
         } catch (error) {
           clickResults.push(`RAF Synchronized: FAILED - ${error}`);
+        }
+      } else if (method.name === 'stealth_injection') {
+        // 🥷 STEALTH INJECTION (ULTIMATE STEALTH - прямая инъекция в DOM)
+        try {
+          // Создаем невидимый клон кнопки для тестирования
+          const buttonClone = button.cloneNode(true) as HTMLElement;
+          buttonClone.style.position = 'absolute';
+          buttonClone.style.left = '-9999px';
+          buttonClone.style.top = '-9999px';
+          buttonClone.style.visibility = 'hidden';
+          buttonClone.style.pointerEvents = 'none';
+          document.body.appendChild(buttonClone);
+          
+          // Инъекция через прямое изменение DOM свойств
+          const originalOnClick = button.onclick;
+          
+          // Временно перехватываем все события
+          const eventCapture: any[] = [];
+          const originalAddEventListener = button.addEventListener;
+          
+          button.addEventListener = function(type: string, listener: any, options?: any) {
+            eventCapture.push({ type, listener, options });
+            return originalAddEventListener.call(this, type, listener, options);
+          };
+          
+          // Имитируем "естественное" взаимодействие через DOM манипуляции
+          const rect = button.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          // Создаем синтетическое событие с полными метаданными
+          const syntheticEvent = {
+            type: 'click',
+            target: button,
+            currentTarget: button,
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            isTrusted: true, // Пытаемся обмануть проверку isTrusted
+            timeStamp: performance.now(),
+            clientX: centerX,
+            clientY: centerY,
+            screenX: centerX + window.screenX,
+            screenY: centerY + window.screenY,
+            button: 0,
+            buttons: 0,
+            ctrlKey: false,
+            shiftKey: false,
+            altKey: false,
+            metaKey: false,
+            detail: 1,
+            view: window,
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            stopImmediatePropagation: () => {}
+          };
+          
+          // Прямой вызов обработчиков через DOM API
+          if (originalOnClick) {
+            originalOnClick.call(button, syntheticEvent as any);
+          }
+          
+          // Триггерим все зарегистрированные обработчики
+          for (const captured of eventCapture) {
+            if (captured.type === 'click' && typeof captured.listener === 'function') {
+              captured.listener.call(button, syntheticEvent);
+            }
+          }
+          
+          // Финальный native клик для гарантии
+          await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+          button.click();
+          
+          // Очистка
+          document.body.removeChild(buttonClone);
+          button.addEventListener = originalAddEventListener;
+          
+          clickResults.push('Stealth Injection: SUCCESS');
+          clickSuccess = true;
+        } catch (error) {
+          clickResults.push(`Stealth Injection: FAILED - ${error}`);
+        }
+      } else if (method.name === 'dom_manipulation') {
+        // 🔧 DOM MANIPULATION (прямое изменение DOM для обхода защиты)
+        try {
+          // Сохраняем оригинальное состояние
+          const originalDisabled = (button as HTMLButtonElement).disabled;
+          const originalAriaDisabled = button.getAttribute('aria-disabled');
+          const originalClasses = button.className;
+          
+          // Временно "активируем" кнопку если она заблокирована
+          if ((button as HTMLButtonElement).disabled) {
+            (button as HTMLButtonElement).disabled = false;
+          }
+          if (button.getAttribute('aria-disabled') === 'true') {
+            button.setAttribute('aria-disabled', 'false');
+          }
+          
+          // Удаляем блокирующие CSS классы
+          const blockingClasses = ['disabled', 'inactive', 'loading', 'cooldown'];
+          blockingClasses.forEach(cls => {
+            if (button.classList.contains(cls)) {
+              button.classList.remove(cls);
+            }
+          });
+          
+          // Добавляем активные классы если нужно
+          if (!button.classList.contains('active')) {
+            button.classList.add('active');
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+          
+          // Создаем максимально реалистичное событие клика
+          const rect = button.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          // Последовательность событий как у реального пользователя
+          const events = [
+            new MouseEvent('mouseenter', { bubbles: false, cancelable: true, view: window, clientX: centerX, clientY: centerY }),
+            new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY }),
+            new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY, button: 0, buttons: 1 }),
+            new FocusEvent('focus', { bubbles: true, cancelable: true, view: window }),
+            new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY, button: 0, buttons: 0 }),
+            new MouseEvent('click', { bubbles: true, cancelable: true, view: window, clientX: centerX, clientY: centerY, button: 0, buttons: 0 })
+          ];
+          
+          for (const event of events) {
+            button.dispatchEvent(event);
+            await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 40));
+          }
+          
+          // Финальный native клик
+          button.click();
+          
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Восстанавливаем оригинальное состояние
+          (button as HTMLButtonElement).disabled = originalDisabled;
+          if (originalAriaDisabled !== null) {
+            button.setAttribute('aria-disabled', originalAriaDisabled);
+          }
+          button.className = originalClasses;
+          
+          clickResults.push('DOM Manipulation: SUCCESS');
+          clickSuccess = true;
+        } catch (error) {
+          clickResults.push(`DOM Manipulation: FAILED - ${error}`);
+        }
+      } else if (method.name === 'event_hijacking') {
+        // 🎭 EVENT HIJACKING (перехват и модификация событий)
+        try {
+          // Перехватываем и модифицируем события на уровне document
+          const originalDispatchEvent = Document.prototype.dispatchEvent;
+          const originalElementDispatchEvent = Element.prototype.dispatchEvent;
+          
+          let eventIntercepted = false;
+          
+          // Перехватчик для document
+          Document.prototype.dispatchEvent = function(event: Event) {
+            if (event.type === 'click' && event.target === button) {
+              eventIntercepted = true;
+              // Модифицируем событие чтобы оно выглядело более "человечным"
+              Object.defineProperty(event, 'isTrusted', { value: true, writable: false });
+              Object.defineProperty(event, 'timeStamp', { value: performance.now(), writable: false });
+            }
+            return originalDispatchEvent.call(this, event);
+          };
+          
+          // Перехватчик для элементов
+          Element.prototype.dispatchEvent = function(event: Event) {
+            if (this === button && event.type === 'click') {
+              eventIntercepted = true;
+              // Добавляем реалистичные метаданные
+              Object.defineProperty(event, 'isTrusted', { value: true, writable: false });
+              Object.defineProperty(event, 'detail', { value: 1, writable: false });
+            }
+            return originalElementDispatchEvent.call(this, event);
+          };
+          
+          // Создаем "перехваченное" событие клика
+          const rect = button.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          // Имитируем последовательность как у реального браузера
+          const mouseDown = new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: centerX,
+            clientY: centerY,
+            button: 0,
+            buttons: 1
+          });
+          
+          const mouseUp = new MouseEvent('mouseup', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: centerX,
+            clientY: centerY,
+            button: 0,
+            buttons: 0
+          });
+          
+          const click = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: centerX,
+            clientY: centerY,
+            button: 0,
+            buttons: 0
+          });
+          
+          // Выполняем последовательность с перехватом
+          button.dispatchEvent(mouseDown);
+          await new Promise(resolve => setTimeout(resolve, 80 + Math.random() * 120));
+          
+          button.dispatchEvent(mouseUp);
+          await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 40));
+          
+          button.dispatchEvent(click);
+          await new Promise(resolve => setTimeout(resolve, 50));
+          
+          // Дополнительный native клик
+          button.click();
+          
+          // Восстанавливаем оригинальные методы
+          Document.prototype.dispatchEvent = originalDispatchEvent;
+          Element.prototype.dispatchEvent = originalElementDispatchEvent;
+          
+          clickResults.push('Event Hijacking: SUCCESS' + (eventIntercepted ? ' (intercepted)' : ''));
+          clickSuccess = true;
+        } catch (error) {
+          // Восстанавливаем методы в случае ошибки
+          try {
+            Document.prototype.dispatchEvent = Document.prototype.dispatchEvent;
+            Element.prototype.dispatchEvent = Element.prototype.dispatchEvent;
+          } catch {}
+          clickResults.push(`Event Hijacking: FAILED - ${error}`);
         }
       } else if (method.name === 'realistic_mouse' && isTabActive) {
         // Method 1: Реалистичная последовательность событий (только для активных)
