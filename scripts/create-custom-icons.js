@@ -1,10 +1,29 @@
 #!/usr/bin/env node
 
+// ⚠️  WARNING: This script will OVERWRITE existing icons!
+// ⚠️  If you have custom icons, DO NOT run this script!
+// ⚠️  Use 'npm run create-icons' only if you want to generate new icons
+// ⚠️  Custom user icons should be preserved by NOT running this script
+
 const fs = require('fs');
 const path = require('path');
 
-// Ensure icons directory exists
+// Check if custom icons exist and warn user
 const iconsDir = path.join(__dirname, '..', 'public', 'icons');
+if (fs.existsSync(path.join(iconsDir, 'icon16.png'))) {
+    console.log('⚠️  WARNING: Custom icons detected!');
+    console.log('⚠️  This script will overwrite your custom icons.');
+    console.log('⚠️  If you want to keep your custom icons, press Ctrl+C now!');
+    console.log('⚠️  Continuing in 5 seconds...');
+    
+    // Give user time to cancel
+    const start = Date.now();
+    while (Date.now() - start < 5000) {
+        // Wait 5 seconds
+    }
+}
+
+// Ensure icons directory exists
 if (!fs.existsSync(iconsDir)) {
     fs.mkdirSync(iconsDir, { recursive: true });
 }
