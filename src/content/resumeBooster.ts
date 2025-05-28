@@ -594,18 +594,40 @@ async function clickBoostButton(): Promise<boolean> {
             buttonStateChanges++;
             console.log('✅ Button became inactive - click likely successful');
             
-            // Логируем успешное обнаружение изменения состояния кнопки
-            logger.success('ContentScript', 'Button state changed - click successful', {
-              url: window.location.href,
-              checksPerformed: checksPerformed,
-              waitTime: waitTime,
-              simulationType: isTabActive ? 'full' : 'lightweight',
-              detectionMethod: 'button_state_change'
-            }).catch(() => {});
+            // 🔍 ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ждем и проверяем, не вернулась ли кнопка к активному состоянию
+            console.log('🔍 Verifying button state stability...');
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Ждем 1.5 секунды
             
-            // Дополнительная небольшая задержка для завершения
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return true;
+            const buttonAfterDelay = findBoostButton();
+            const stillInactiveAfterDelay = buttonAfterDelay ? !isButtonActive() : false;
+            
+            if (stillInactiveAfterDelay) {
+              // Логируем подтвержденное изменение состояния кнопки
+              logger.success('ContentScript', 'Button state change confirmed - click successful', {
+                url: window.location.href,
+                checksPerformed: checksPerformed,
+                waitTime: waitTime,
+                simulationType: isTabActive ? 'full' : 'lightweight',
+                detectionMethod: 'button_state_change_verified',
+                stableInactiveTime: 1500
+              }).catch(() => {});
+              
+              // Дополнительная небольшая задержка для завершения
+              await new Promise(resolve => setTimeout(resolve, 500));
+              return true;
+            } else {
+              // Логируем возврат кнопки к активному состоянию
+              logger.warning('ContentScript', 'Button returned to active state - possible rollback', {
+                url: window.location.href,
+                checksPerformed: checksPerformed,
+                simulationType: isTabActive ? 'full' : 'lightweight',
+                detectionMethod: 'button_reactivation_detected',
+                rollbackTime: 1500
+              }).catch(() => {});
+              
+              console.log('⚠️ Button became active again, continuing to monitor...');
+              // Продолжаем цикл ожидания
+            }
           }
         }
         
@@ -620,17 +642,45 @@ async function clickBoostButton(): Promise<boolean> {
             successIndicatorsFound.push(indicator);
             console.log(`✅ Found success indicator "${indicator}" on page`);
             
-            // Логируем успешное обнаружение индикатора
-            logger.success('ContentScript', 'Success indicator found - click successful', {
-              url: window.location.href,
-              indicator: indicator,
-              checksPerformed: checksPerformed,
-              waitTime: waitTime,
-              simulationType: isTabActive ? 'full' : 'lightweight',
-              detectionMethod: 'success_indicator'
-            }).catch(() => {});
+            // 🔍 ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ждем еще немного и проверяем, не откатился ли результат
+            console.log('🔍 Waiting additional time to verify success is not rolled back...');
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Ждем 2 секунды
             
-            return true;
+            // Проверяем, что кнопка все еще неактивна или индикатор все еще есть
+            const buttonAfterDelay = findBoostButton();
+            const pageTextAfterDelay = document.body.textContent?.toLowerCase() || '';
+            const indicatorStillPresent = pageTextAfterDelay.includes(indicator);
+            const buttonStillInactive = buttonAfterDelay ? !isButtonActive() : false;
+            
+            if (indicatorStillPresent || buttonStillInactive) {
+              // Логируем подтвержденный успех
+              logger.success('ContentScript', 'Success confirmed after verification delay', {
+                url: window.location.href,
+                indicator: indicator,
+                indicatorStillPresent: indicatorStillPresent,
+                buttonStillInactive: buttonStillInactive,
+                checksPerformed: checksPerformed,
+                waitTime: waitTime,
+                simulationType: isTabActive ? 'full' : 'lightweight',
+                detectionMethod: 'success_indicator_verified'
+              }).catch(() => {});
+              
+              return true;
+            } else {
+              // Логируем откат результата
+              logger.warning('ContentScript', 'Success indicator disappeared - possible rollback detected', {
+                url: window.location.href,
+                indicator: indicator,
+                indicatorStillPresent: indicatorStillPresent,
+                buttonStillInactive: buttonStillInactive,
+                checksPerformed: checksPerformed,
+                simulationType: isTabActive ? 'full' : 'lightweight',
+                detectionMethod: 'rollback_detected'
+              }).catch(() => {});
+              
+              // Продолжаем ожидание, возможно другие методы сработают
+              console.log('⚠️ Success indicator disappeared, continuing to wait...');
+            }
           }
         }
       }
@@ -646,7 +696,79 @@ async function clickBoostButton(): Promise<boolean> {
         simulationType: isTabActive ? 'full' : 'lightweight'
       }).catch(() => {});
       
-      return true;
+      // 🔍 ФИНАЛЬНАЯ ПРОВЕРКА: анализируем общее состояние страницы
+      console.log('🔍 Performing final comprehensive check...');
+      
+      const finalButton = findBoostButton();
+      const finalButtonActive = finalButton ? isButtonActive() : false;
+      const finalPageText = document.body.textContent?.toLowerCase() || '';
+      
+      // Проверяем дополнительные индикаторы
+      const additionalSuccessIndicators = [
+        'резюме обновлено',
+        'резюме поднято', 
+        'поднято в поиске',
+        'обновление прошло успешно',
+        'resume updated',
+        'resume boosted'
+      ];
+      
+      const foundAdditionalIndicators: string[] = [];
+      for (const indicator of additionalSuccessIndicators) {
+        if (finalPageText.includes(indicator)) {
+          foundAdditionalIndicators.push(indicator);
+        }
+      }
+      
+      // Проверяем изменения в URL (некоторые сайты добавляют параметры успеха)
+      const urlChanged = window.location.href !== window.location.href.split('?')[0];
+      const hasSuccessParams = window.location.href.includes('success') || 
+                              window.location.href.includes('updated') ||
+                              window.location.href.includes('boosted');
+      
+      // Итоговая оценка успеха
+      const successScore = 
+        (foundAdditionalIndicators.length > 0 ? 2 : 0) +
+        (successIndicatorsFound.length > 0 ? 2 : 0) +
+        (!finalButtonActive ? 1 : 0) +
+        (buttonStateChanges > 0 ? 1 : 0) +
+        (hasSuccessParams ? 1 : 0);
+      
+      const isLikelySuccessful = successScore >= 2;
+      
+      // Логируем финальный результат
+      if (isLikelySuccessful) {
+        logger.success('ContentScript', 'Final analysis indicates likely success', {
+          url: window.location.href,
+          successScore: successScore,
+          foundAdditionalIndicators: foundAdditionalIndicators,
+          successIndicatorsFound: successIndicatorsFound,
+          finalButtonActive: finalButtonActive,
+          buttonStateChanges: buttonStateChanges,
+          hasSuccessParams: hasSuccessParams,
+          urlChanged: urlChanged,
+          simulationType: isTabActive ? 'full' : 'lightweight',
+          detectionMethod: 'comprehensive_analysis'
+        }).catch(() => {});
+        
+        return true;
+      } else {
+        logger.error('ContentScript', 'Final analysis indicates likely failure', {
+          url: window.location.href,
+          successScore: successScore,
+          foundAdditionalIndicators: foundAdditionalIndicators,
+          successIndicatorsFound: successIndicatorsFound,
+          finalButtonActive: finalButtonActive,
+          buttonStateChanges: buttonStateChanges,
+          hasSuccessParams: hasSuccessParams,
+          urlChanged: urlChanged,
+          simulationType: isTabActive ? 'full' : 'lightweight',
+          detectionMethod: 'comprehensive_analysis',
+          reason: 'insufficient_success_indicators'
+        }).catch(() => {});
+        
+        return false;
+      }
     } else {
       console.error('❌ All click methods failed');
       return false;
