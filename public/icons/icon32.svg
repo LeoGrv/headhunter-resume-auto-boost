@@ -1,28 +1,46 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4ECDC4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#45B7D1;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE66D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF6B6B;stop-opacity:1" />
     </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
   
-  <!-- Background circle -->
-  <circle cx="16" cy="16" r="14" fill="url(#grad1)" />
+  <!-- Background circle with vibrant gradient -->
+  <circle cx="16" cy="16" r="14" fill="url(#bgGrad)" filter="url(#shadow)" />
   
-  <!-- Inner circle -->
-  <circle cx="16" cy="16" r="10.666666666666666" fill="url(#grad2)" opacity="0.8" />
+  <!-- Inner ring for depth -->
+  <circle cx="16" cy="16" r="10" fill="none" stroke="white" stroke-width="2" opacity="0.3" />
   
-  <!-- Star icon -->
+  <!-- Central star/boost icon -->
   <g transform="translate(16, 16)">
-    <path d="M0,-8 L2.6666666666666665,-2.6666666666666665 L8,0 L2.6666666666666665,2.6666666666666665 L0,8 L-2.6666666666666665,2.6666666666666665 L-8,0 L-2.6666666666666665,-2.6666666666666665 Z" 
+    <path d="M0,-8 L4,-4 L8,0 L4,4 L0,8 L-4,4 L-8,0 L-4,-4 Z" 
+          fill="url(#starGrad)" filter="url(#shadow)" />
+  </g>
+  
+  <!-- Arrow pointing up (boost symbol) -->
+  <g transform="translate(16, 16)">
+    <path d="M0,-5.333333333333333 L2.6666666666666665,-2.6666666666666665 L1.3333333333333333,-2.6666666666666665 L1.3333333333333333,4 L-1.3333333333333333,4 L-1.3333333333333333,-2.6666666666666665 L-2.6666666666666665,-2.6666666666666665 Z" 
           fill="white" opacity="0.9" />
   </g>
   
-  <!-- Small accent dots -->
-  <circle cx="24" cy="8" r="2" fill="white" opacity="0.6" />
-  <circle cx="8" cy="24" r="2" fill="white" opacity="0.6" />
+  <!-- Accent dots for visual interest -->
+  <circle cx="26.666666666666668" cy="5.333333333333333" r="2" fill="white" opacity="0.7" />
+  <circle cx="5.333333333333333" cy="26.666666666666668" r="2" fill="white" opacity="0.7" />
+  
+  <!-- Small sparkles -->
+  <g transform="translate(8, 8)">
+    <path d="M0,-3 L1,-1 L3,0 L1,1 L0,3 L-1,1 L-3,0 L-1,-1 Z" fill="white" opacity="0.6" />
+  </g>
+  <g transform="translate(24, 24)">
+    <path d="M0,-3 L1,-1 L3,0 L1,1 L0,3 L-1,1 L-3,0 L-1,-1 Z" fill="white" opacity="0.6" />
+  </g>
 </svg>
