@@ -8,40 +8,7 @@ console.log('HeadHunter Resume Auto-Boost Extension: Content script loaded');
 
 // ✅ ДИАГНОСТИЧЕСКИЙ ФЛАГ для проверки загрузки content script
 (window as any).resumeBoosterLoaded = true;
-
-// Button selectors (multiple fallbacks for different page layouts)
-const BUTTON_SELECTORS = [
-  // Modern HH selectors (2024)
-  'button[data-qa="resume-update-button"]',
-  'button[data-qa="resume-boost-button"]', 
-  'button[data-qa="resume-raise-button"]',
-  'button[data-qa="resume-refresh-button"]',
-  'button[data-qa="resume-promote-button"]',
-  
-  // Legacy selectors
-  'a[data-qa="resume-update-button"]',
-  '.resume-update-button',
-  '.boost-button',
-  '.resume-raise-button',
-  
-  // Generic class-based selectors
-  '[class*="resume"][class*="update"]',
-  '[class*="resume"][class*="boost"]',
-  '[class*="resume"][class*="raise"]',
-  '[class*="resume"][class*="refresh"]',
-  '[class*="resume"][class*="promote"]',
-  
-  // Text-based selectors (will be handled manually)
-  'button:contains("Поднять в поиске")',
-  'button:contains("Поднять резюме")',
-  'button:contains("Поднять")',
-  'button:contains("Обновить")',
-  'button:contains("Продвинуть")',
-  'button:contains("Refresh")',
-  'a:contains("Поднять в поиске")',
-  'a:contains("Поднять резюме")',
-  'a:contains("Поднять")',
-];
+console.log('✅ resumeBoosterLoaded flag set to true');
 
 // State management
 let isInitialized = false;
@@ -72,6 +39,12 @@ function initialize(): void {
     // Set up page refresh mechanism
     setupPageRefresh().catch(error => {
       console.error('Failed to setup page refresh:', error);
+      
+      // Логируем ошибку настройки обновления страницы
+      logger.error('ContentScript', 'Failed to setup page refresh', {
+        url: window.location.href,
+        error: error instanceof Error ? error.message : String(error)
+      }).catch(() => {});
     });
 
     // Initial button check with delay to ensure page is loaded
@@ -92,6 +65,15 @@ function initialize(): void {
       url: window.location.href,
       readyState: document.readyState
     }).catch(() => {}); // Игнорируем ошибки логирования
+  } catch (error) {
+    // Логируем критическую ошибку инициализации
+    logger.critical('ContentScript', 'Initialization failed', {
+      url: window.location.href,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    }).catch(() => {});
+    
+    console.error('Failed to initialize content script:', error);
   } finally {
     isInitializing = false;
   }
@@ -107,6 +89,14 @@ function findBoostButton(): HTMLElement | null {
   const directButton = document.querySelector('button[data-qa="resume-update-button"]') as HTMLElement;
   if (directButton) {
     console.log('✅ Found button via direct selector:', directButton);
+    
+    // Логируем успешное нахождение кнопки
+    logger.success('ContentScript', 'Button found via direct selector', {
+      url: window.location.href,
+      buttonText: directButton.textContent?.trim(),
+      selector: 'button[data-qa="resume-update-button"]'
+    }).catch(() => {});
+    
     return directButton;
   }
 
@@ -130,11 +120,21 @@ function findBoostButton(): HTMLElement | null {
       
       if (elementText === exactText) {
         console.log(`✅ Found exact match for "${exactText}":`, element);
+        
+        // Логируем нахождение кнопки по тексту
+        logger.success('ContentScript', 'Button found via text match', {
+          url: window.location.href,
+          buttonText: elementText,
+          matchedText: exactText,
+          method: 'exact_text_match'
+        }).catch(() => {});
+        
         return element;
       }
     }
   }
 
+  // Continue with other search methods...
   console.log('🎯 Step 2: Looking for partial text matches...');
   for (const partialText of exactTextMatches) {
     const allElements = document.querySelectorAll('button, a, [role="button"]');
@@ -144,70 +144,31 @@ function findBoostButton(): HTMLElement | null {
       
       if (elementText.includes(partialText)) {
         console.log(`✅ Found partial match for "${partialText}":`, element);
-        return element;
-      }
-    }
-  }
-
-  console.log('🎯 Step 3: Trying data-qa selectors...');
-  for (const selector of BUTTON_SELECTORS) {
-    try {
-      if (!selector.includes(':contains(')) {
-        const element = document.querySelector(selector) as HTMLElement;
-        if (element) {
-          console.log(`✅ Found button with selector "${selector}":`, element);
-          return element;
-        }
-      }
-    } catch (error) {
-      console.warn(`❌ Failed to query selector ${selector}:`, error);
-    }
-  }
-
-  console.log('🎯 Step 4: Aggressive keyword search...');
-  const allClickableElements = document.querySelectorAll(
-    'button, a, [role="button"], [class*="button"], [class*="btn"], span[onclick], div[onclick], [data-qa*="button"], [data-qa*="update"], [data-qa*="boost"], [data-qa*="raise"]'
-  );
-  
-  console.log(`🔍 Searching through ${allClickableElements.length} clickable elements...`);
-  
-  const boostKeywords = [
-    'поднять', 'boost', 'raise', 'update', 'обновить', 'продвинуть', 'refresh', 'поднимать', 'обновлять'
-  ];
-  
-  for (let i = 0; i < allClickableElements.length; i++) {
-    const element = allClickableElements[i] as HTMLElement;
-    const text = element.textContent?.toLowerCase().trim() || '';
-    const dataQa = element.getAttribute('data-qa')?.toLowerCase() || '';
-    const className = (element.className || '').toLowerCase();
-    
-    // Check if element contains boost-related keywords
-    for (const keyword of boostKeywords) {
-      if (text.includes(keyword) || dataQa.includes(keyword) || className.includes(keyword)) {
-        console.log(`✅ Found potential boost button via keyword "${keyword}":`, {
-          element,
-          text: element.textContent?.trim(),
-          dataQa: element.getAttribute('data-qa'),
-          className: element.className
-        });
+        
+        // Логируем нахождение кнопки по частичному совпадению
+        logger.success('ContentScript', 'Button found via partial text match', {
+          url: window.location.href,
+          buttonText: elementText,
+          matchedText: partialText,
+          method: 'partial_text_match'
+        }).catch(() => {});
+        
         return element;
       }
     }
   }
 
   // Debug: log all buttons on the page
-  console.log(`❌ No boost button found. Total clickable elements on page: ${allClickableElements.length}`);
+  console.log(`❌ No boost button found. Total clickable elements on page: ${document.querySelectorAll('button, a, [role="button"]').length}`);
 
-  if (allClickableElements.length > 0) {
-    console.log('📋 Available clickable elements (first 20):');
-    allClickableElements.forEach((btn, index) => {
-      if (index < 20) {
-        console.log(
-          `  ${index + 1}. Text: "${btn.textContent?.trim()}", Classes: "${btn.className}", Data-qa: "${btn.getAttribute('data-qa')}", Tag: "${btn.tagName}"`
-        );
-      }
-    });
-  }
+  // Логируем неудачу поиска кнопки
+  logger.error('ContentScript', 'Button not found on page', {
+    url: window.location.href,
+    totalButtons: document.querySelectorAll('button').length,
+    totalLinks: document.querySelectorAll('a').length,
+    totalClickable: document.querySelectorAll('button, a, [role="button"]').length,
+    pageTitle: document.title
+  }).catch(() => {});
 
   return null;
 }
@@ -219,6 +180,10 @@ function isButtonActive(): boolean {
   const button = findBoostButton();
 
   if (!button) {
+    // Логируем отсутствие кнопки
+    logger.warning('ContentScript', 'Button activity check failed - button not found', {
+      url: window.location.href
+    }).catch(() => {});
     return false;
   }
 
@@ -227,6 +192,13 @@ function isButtonActive(): boolean {
     button.hasAttribute('disabled') ||
     button.getAttribute('aria-disabled') === 'true'
   ) {
+    // Логируем неактивную кнопку
+    logger.warning('ContentScript', 'Button is disabled', {
+      url: window.location.href,
+      buttonText: button.textContent?.trim(),
+      disabled: button.hasAttribute('disabled'),
+      ariaDisabled: button.getAttribute('aria-disabled')
+    }).catch(() => {});
     return false;
   }
 
@@ -236,6 +208,13 @@ function isButtonActive(): boolean {
 
   for (const inactiveClass of inactiveClasses) {
     if (classList.contains(inactiveClass)) {
+      // Логируем неактивную кнопку по классу
+      logger.warning('ContentScript', 'Button has inactive class', {
+        url: window.location.href,
+        buttonText: button.textContent?.trim(),
+        inactiveClass: inactiveClass,
+        allClasses: button.className
+      }).catch(() => {});
       return false;
     }
   }
@@ -251,9 +230,22 @@ function isButtonActive(): boolean {
 
   for (const inactiveText of inactiveTexts) {
     if (buttonText.includes(inactiveText)) {
+      // Логируем неактивную кнопку по тексту
+      logger.warning('ContentScript', 'Button has inactive text', {
+        url: window.location.href,
+        buttonText: button.textContent?.trim(),
+        inactiveText: inactiveText
+      }).catch(() => {});
       return false;
     }
   }
+
+  // Логируем активную кнопку
+  logger.success('ContentScript', 'Button is active and clickable', {
+    url: window.location.href,
+    buttonText: button.textContent?.trim(),
+    className: button.className
+  }).catch(() => {});
 
   return true;
 }
@@ -769,7 +761,31 @@ async function handleBoostRequest(
   sendResponse: (response: ContentMessage) => void
 ): Promise<void> {
   try {
+    // Логируем начало попытки клика
+    logger.warning('ContentScript', 'Boost request received - starting click attempt', {
+      url: window.location.href,
+      timestamp: new Date().toISOString()
+    }).catch(() => {});
+
     const success = await clickBoostButton();
+
+    // Логируем результат клика
+    if (success) {
+      logger.success('ContentScript', 'Button click completed successfully', {
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+        buttonFound: !!findBoostButton(),
+        buttonActive: isButtonActive()
+      }).catch(() => {});
+    } else {
+      logger.error('ContentScript', 'Button click failed', {
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+        buttonFound: !!findBoostButton(),
+        buttonActive: isButtonActive(),
+        reason: 'clickBoostButton returned false'
+      }).catch(() => {});
+    }
 
     sendResponse({
       type: 'BUTTON_CLICKED',
@@ -782,6 +798,14 @@ async function handleBoostRequest(
     });
   } catch (error) {
     console.error('Error handling boost request:', error);
+
+    // Логируем критическую ошибку
+    logger.critical('ContentScript', 'Exception during boost request', {
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    }).catch(() => {});
 
     sendResponse({
       type: 'ERROR',
