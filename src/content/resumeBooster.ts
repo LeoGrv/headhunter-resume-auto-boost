@@ -277,71 +277,122 @@ async function clickBoostButton(): Promise<boolean> {
       offsetParent: !!button.offsetParent
     });
 
-    // Scroll button into view
+    // 🤖 ИМИТАЦИЯ ЧЕЛОВЕЧЕСКОГО ПОВЕДЕНИЯ
+    console.log('🤖 Simulating human behavior before click...');
+    
+    // 1. Случайная задержка перед действием (как человек думает)
+    const thinkingDelay = Math.random() * 1000 + 500; // 0.5-1.5 сек
+    await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+    
+    // 2. Движение мыши к кнопке (имитация наведения)
+    const rect = button.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Создаем события движения мыши
+    const mouseMoveEvent = new MouseEvent('mousemove', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: centerX,
+      clientY: centerY
+    });
+    document.dispatchEvent(mouseMoveEvent);
+    
+    // 3. Наведение на кнопку
+    const mouseEnterEvent = new MouseEvent('mouseenter', {
+      bubbles: false,
+      cancelable: true,
+      view: window,
+      clientX: centerX,
+      clientY: centerY
+    });
+    button.dispatchEvent(mouseEnterEvent);
+    
+    // 4. Hover эффект
+    const mouseOverEvent = new MouseEvent('mouseover', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: centerX,
+      clientY: centerY
+    });
+    button.dispatchEvent(mouseOverEvent);
+    
+    // 5. Пауза на hover (как человек читает кнопку)
+    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+
+    // Scroll button into view (плавно, как человек)
     button.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     // Wait for scroll to complete
     await new Promise(resolve => setTimeout(resolve, 500));
 
+    // 6. Focus на кнопку (как при Tab навигации)
+    try {
+      button.focus();
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (e) {
+      console.warn('Focus failed:', e);
+    }
+
+    console.log('🤖 Human simulation complete, starting click sequence...');
+
     // Try multiple click methods for better compatibility
     let clickSuccess = false;
     const clickResults: string[] = [];
 
-    // Method 1: Focus and direct click
+    // Method 1: Realistic mouse click sequence
     try {
-      button.focus();
-      await new Promise(resolve => setTimeout(resolve, 100));
-      button.click();
-      console.log('✅ Method 1: Direct click executed');
-      clickResults.push('Direct click: SUCCESS');
-      clickSuccess = true;
-    } catch (error) {
-      console.warn('❌ Method 1 failed:', error);
-      clickResults.push(`Direct click: FAILED - ${error}`);
-    }
-
-    // Method 2: Mouse events sequence (more comprehensive)
-    try {
-      const rect = button.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
+      // Более реалистичная последовательность событий мыши
       const mouseEvents = [
-        { type: 'mouseover', bubbles: true },
-        { type: 'mouseenter', bubbles: false },
-        { type: 'mousemove', bubbles: true },
-        { type: 'mousedown', bubbles: true, button: 0 },
-        { type: 'mouseup', bubbles: true, button: 0 },
-        { type: 'click', bubbles: true, button: 0 }
+        { type: 'mousedown', delay: 0 },
+        { type: 'mouseup', delay: 50 + Math.random() * 100 }, // Человеческая задержка
+        { type: 'click', delay: 10 }
       ];
 
       for (const eventConfig of mouseEvents) {
+        await new Promise(resolve => setTimeout(resolve, eventConfig.delay));
+        
         const event = new MouseEvent(eventConfig.type, {
-          bubbles: eventConfig.bubbles,
+          bubbles: true,
           cancelable: true,
           view: window,
-          button: eventConfig.button || 0,
-          buttons: 1,
-          clientX: centerX,
-          clientY: centerY,
+          button: 0,
+          buttons: eventConfig.type === 'mousedown' ? 1 : 0,
+          clientX: centerX + (Math.random() - 0.5) * 2, // Небольшой джиттер
+          clientY: centerY + (Math.random() - 0.5) * 2,
           screenX: centerX + window.screenX,
           screenY: centerY + window.screenY
         });
+        
         button.dispatchEvent(event);
       }
-      console.log('✅ Method 2: Comprehensive mouse event sequence executed');
-      clickResults.push('Mouse events: SUCCESS');
+      
+      console.log('✅ Method 1: Realistic mouse sequence executed');
+      clickResults.push('Realistic mouse: SUCCESS');
+      clickSuccess = true;
+    } catch (error) {
+      console.warn('❌ Method 1 failed:', error);
+      clickResults.push(`Realistic mouse: FAILED - ${error}`);
+    }
+
+    // Method 2: Direct click with human timing
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+      button.click();
+      console.log('✅ Method 2: Direct click executed');
+      clickResults.push('Direct click: SUCCESS');
       clickSuccess = true;
     } catch (error) {
       console.warn('❌ Method 2 failed:', error);
-      clickResults.push(`Mouse events: FAILED - ${error}`);
+      clickResults.push(`Direct click: FAILED - ${error}`);
     }
 
-    // Method 3: Keyboard activation (Enter and Space)
+    // Method 3: Keyboard activation (Enter) - более человечно
     try {
-      button.focus();
+      await new Promise(resolve => setTimeout(resolve, 50));
       
-      // Try Enter key
       const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         code: 'Enter',
@@ -352,87 +403,23 @@ async function clickBoostButton(): Promise<boolean> {
       });
       button.dispatchEvent(enterEvent);
       
-      // Try Space key
-      const spaceEvent = new KeyboardEvent('keydown', {
-        key: ' ',
-        code: 'Space',
-        keyCode: 32,
-        which: 32,
+      // Также keyup для полноты
+      const enterUpEvent = new KeyboardEvent('keyup', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
         bubbles: true,
         cancelable: true
       });
-      button.dispatchEvent(spaceEvent);
+      button.dispatchEvent(enterUpEvent);
       
-      console.log('✅ Method 3: Keyboard events (Enter + Space) executed');
-      clickResults.push('Keyboard events: SUCCESS');
+      console.log('✅ Method 3: Keyboard Enter executed');
+      clickResults.push('Keyboard Enter: SUCCESS');
       clickSuccess = true;
     } catch (error) {
       console.warn('❌ Method 3 failed:', error);
-      clickResults.push(`Keyboard events: FAILED - ${error}`);
-    }
-
-    // Method 4: Try to trigger form submission if button is in a form
-    try {
-      const form = button.closest('form');
-      if (form) {
-        form.submit();
-        console.log('✅ Method 4: Form submission executed');
-        clickResults.push('Form submit: SUCCESS');
-        clickSuccess = true;
-      } else {
-        clickResults.push('Form submit: SKIPPED (no form)');
-      }
-    } catch (error) {
-      console.warn('❌ Method 4 failed:', error);
-      clickResults.push(`Form submit: FAILED - ${error}`);
-    }
-
-    // Method 5: Try to trigger onclick handler directly
-    try {
-      const onclickHandler = button.onclick;
-      if (onclickHandler) {
-        onclickHandler.call(button, new MouseEvent('click'));
-        console.log('✅ Method 5: Direct onclick handler executed');
-        clickResults.push('Direct onclick: SUCCESS');
-        clickSuccess = true;
-      } else {
-        clickResults.push('Direct onclick: SKIPPED (no handler)');
-      }
-    } catch (error) {
-      console.warn('❌ Method 5 failed:', error);
-      clickResults.push(`Direct onclick: FAILED - ${error}`);
-    }
-
-    // Method 6: Try to find and trigger any parent clickable elements
-    try {
-      const clickableParent = button.closest('[onclick], [role="button"], a, button');
-      if (clickableParent && clickableParent !== button) {
-        (clickableParent as HTMLElement).click();
-        console.log('✅ Method 6: Parent element click executed');
-        clickResults.push('Parent click: SUCCESS');
-        clickSuccess = true;
-      } else {
-        clickResults.push('Parent click: SKIPPED (no clickable parent)');
-      }
-    } catch (error) {
-      console.warn('❌ Method 6 failed:', error);
-      clickResults.push(`Parent click: FAILED - ${error}`);
-    }
-
-    // Method 7: Try programmatic navigation if it's a link
-    try {
-      const href = button.getAttribute('href');
-      if (href && href !== '#') {
-        window.location.href = href;
-        console.log('✅ Method 7: Direct navigation executed');
-        clickResults.push('Direct navigation: SUCCESS');
-        clickSuccess = true;
-      } else {
-        clickResults.push('Direct navigation: SKIPPED (no href)');
-      }
-    } catch (error) {
-      console.warn('❌ Method 7 failed:', error);
-      clickResults.push(`Direct navigation: FAILED - ${error}`);
+      clickResults.push(`Keyboard Enter: FAILED - ${error}`);
     }
 
     console.log('📊 Click attempt summary:', clickResults);
@@ -444,11 +431,12 @@ async function clickBoostButton(): Promise<boolean> {
       logger.success('ContentScript', 'Button click attempts completed', {
         url: window.location.href,
         buttonText: button.textContent?.trim(),
-        methods: clickResults
+        methods: clickResults,
+        humanSimulation: true
       }).catch(() => {});
       
-      // Wait to see if the page responds
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличил время ожидания
+      // Wait longer to see if the page responds (увеличил время)
+      await new Promise(resolve => setTimeout(resolve, 5000));
       
       // Check if button state changed (might be disabled after click)
       const buttonAfterClick = findBoostButton();
