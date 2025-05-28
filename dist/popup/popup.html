@@ -22,16 +22,27 @@
                 <div class="header-content">
                     <div class="brand-section">
                         <div class="app-icon">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor"/>
-                                <path d="M19 15L19.5 17L21 17.5L19.5 18L19 20L18.5 18L17 17.5L18.5 17L19 15Z" fill="currentColor"/>
-                                <path d="M5 15L5.5 17L7 17.5L5.5 18L5 20L4.5 18L3 17.5L4.5 17L5 15Z" fill="currentColor"/>
+                            <svg class="app-icon" viewBox="0 0 24 24" fill="none">
+                                <defs>
+                                    <linearGradient id="appGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="12" cy="12" r="10" fill="url(#appGrad)"/>
+                                <path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z" fill="url(#starGrad)"/>
+                                <circle cx="18" cy="6" r="2" fill="white" opacity="0.6"/>
+                                <circle cx="6" cy="18" r="2" fill="white" opacity="0.6"/>
                             </svg>
                         </div>
                         <div class="brand-text">
                             <h1 class="app-title">HH Resume Boost</h1>
                             <div class="version-badge">
-                                <span class="version-info">v1.2.49</span>
+                                <span class="version-info">v1.2.51</span>
                                 <span class="version-status">MODERN UI</span>
                             </div>
                         </div>
@@ -53,11 +64,17 @@
                     <div class="card-header">
                         <h2 class="card-title">
                             <svg class="card-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <defs>
+                                    <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ffecd2;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#fcb69f;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="url(#docGrad)" stroke="currentColor" stroke-width="1"/>
                                 <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 13H8" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 17H8" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 9H8" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             Найденные резюме
                         </h2>
@@ -81,7 +98,13 @@
                     <div class="card-header">
                         <h2 class="card-title">
                             <svg class="card-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M13 3L4 14H11L10 21L19 10H12L13 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <defs>
+                                    <linearGradient id="lightningGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M13 3L4 14H11L10 21L19 10H12L13 3Z" fill="url(#lightningGrad)" stroke="currentColor" stroke-width="1"/>
                             </svg>
                             Управление
                         </h2>
@@ -111,8 +134,14 @@
                     <div class="card-header">
                         <h2 class="card-title">
                             <svg class="card-icon" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="currentColor" stroke-width="2"/>
+                                <defs>
+                                    <linearGradient id="settingsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="12" cy="12" r="3" fill="url(#settingsGrad)"/>
+                                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="url(#settingsGrad)" stroke-width="2"/>
                             </svg>
                             Настройки времени
                         </h2>
@@ -127,8 +156,14 @@
                             <div class="setting-item">
                                 <label class="setting-label">
                                     <svg class="setting-icon" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                        <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"/>
+                                        <defs>
+                                            <linearGradient id="clockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" style="stop-color:#ffecd2;stop-opacity:1" />
+                                                <stop offset="100%" style="stop-color:#fcb69f;stop-opacity:1" />
+                                            </linearGradient>
+                                        </defs>
+                                        <circle cx="12" cy="12" r="10" fill="url(#clockGrad)" stroke="currentColor" stroke-width="1"/>
+                                        <polyline points="12,6 12,12 16,14" stroke="#667eea" stroke-width="2"/>
                                     </svg>
                                     Интервал поднятия резюме
                                 </label>
@@ -148,7 +183,13 @@
                             <div class="setting-item">
                                 <label class="setting-label">
                                     <svg class="setting-icon" viewBox="0 0 24 24" fill="none">
-                                        <path d="M1 4v16l18-8L1 4z" stroke="currentColor" stroke-width="2"/>
+                                        <defs>
+                                            <linearGradient id="refreshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                                                <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path d="M1 4v16l18-8L1 4z" fill="url(#refreshGrad)" stroke="currentColor" stroke-width="1"/>
                                     </svg>
                                     Обновление страницы
                                 </label>
@@ -192,10 +233,16 @@
                     <div class="card-header">
                         <h2 class="card-title">
                             <svg class="card-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <defs>
+                                    <linearGradient id="logGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="url(#logGrad)" stroke="currentColor" stroke-width="1"/>
                                 <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9 11H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 15H15" stroke="#4facfe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 11H15" stroke="#4facfe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             Журнал активности
                         </h2>
