@@ -1,6 +1,6 @@
 {
   "name": "hh-resume-booster",
-  "version": "1.2.27",
+  "version": "1.2.29",
   "description": "Автоматическое поднятие резюме на HeadHunter",
   "main": "dist/background/serviceWorker.js",
   "scripts": {

@@ -284,6 +284,14 @@ async function clickBoostButton(): Promise<boolean> {
     // 🤖 ГИБРИДНАЯ ИМИТАЦИЯ ЧЕЛОВЕЧЕСКОГО ПОВЕДЕНИЯ
     console.log('🤖 Starting human behavior simulation...');
     
+    // Логируем начало имитации
+    logger.warning('ContentScript', 'Human simulation started', {
+      url: window.location.href,
+      tabActive: isTabActive,
+      simulationType: isTabActive ? 'full' : 'lightweight',
+      buttonText: button.textContent?.trim()
+    }).catch(() => {});
+    
     // 1. Универсальная задержка "размышления" (работает везде)
     const thinkingDelay = isTabActive ? 
       (Math.random() * 1000 + 500) :  // 0.5-1.5 сек для активной
@@ -309,80 +317,120 @@ async function clickBoostButton(): Promise<boolean> {
       // 🖱️ ПОЛНАЯ ИМИТАЦИЯ для активной вкладки
       console.log('🖱️ Full mouse simulation for active tab...');
       
-      const rect = button.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      // Движение мыши к кнопке
-      const mouseMoveEvent = new MouseEvent('mousemove', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: centerX,
-        clientY: centerY
-      });
-      document.dispatchEvent(mouseMoveEvent);
-      
-      // Наведение на кнопку
-      const mouseEnterEvent = new MouseEvent('mouseenter', {
-        bubbles: false,
-        cancelable: true,
-        view: window,
-        clientX: centerX,
-        clientY: centerY
-      });
-      button.dispatchEvent(mouseEnterEvent);
-      
-      // Hover эффект
-      const mouseOverEvent = new MouseEvent('mouseover', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: centerX,
-        clientY: centerY
-      });
-      button.dispatchEvent(mouseOverEvent);
-      
-      // Пауза на hover
-      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
-
-      // Focus на кнопку
       try {
-        button.focus();
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (e) {
-        console.warn('Focus failed:', e);
+        const rect = button.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Движение мыши к кнопке
+        const mouseMoveEvent = new MouseEvent('mousemove', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: centerX,
+          clientY: centerY
+        });
+        document.dispatchEvent(mouseMoveEvent);
+        
+        // Наведение на кнопку
+        const mouseEnterEvent = new MouseEvent('mouseenter', {
+          bubbles: false,
+          cancelable: true,
+          view: window,
+          clientX: centerX,
+          clientY: centerY
+        });
+        button.dispatchEvent(mouseEnterEvent);
+        
+        // Hover эффект
+        const mouseOverEvent = new MouseEvent('mouseover', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: centerX,
+          clientY: centerY
+        });
+        button.dispatchEvent(mouseOverEvent);
+        
+        // Пауза на hover
+        await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+
+        // Focus на кнопку
+        try {
+          button.focus();
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (e) {
+          console.warn('Focus failed:', e);
+        }
+        
+        // Логируем успешную полную имитацию
+        logger.success('ContentScript', 'Full mouse simulation completed', {
+          url: window.location.href,
+          mouseEvents: ['mousemove', 'mouseenter', 'mouseover'],
+          focusSuccess: true,
+          buttonCoords: { x: centerX, y: centerY }
+        }).catch(() => {});
+        
+      } catch (error) {
+        // Логируем ошибку полной имитации
+        logger.error('ContentScript', 'Full mouse simulation failed', {
+          url: window.location.href,
+          error: error instanceof Error ? error.message : String(error)
+        }).catch(() => {});
       }
     } else {
       // ⚡ ЛЕГКАЯ ИМИТАЦИЯ для неактивной вкладки
       console.log('⚡ Lightweight simulation for background tab...');
       
-      // Имитируем "чтение" кнопки через анализ текста
-      const buttonText = button.textContent?.trim() || '';
-      const readingTime = Math.max(buttonText.length * 10, 100); // 10ms на символ, минимум 100ms
-      console.log(`📖 Simulating reading "${buttonText}" (${readingTime}ms)`);
-      await new Promise(resolve => setTimeout(resolve, readingTime));
-      
-      // Имитируем focus через программные события (работают в фоне)
       try {
-        const focusEvent = new FocusEvent('focus', {
-          bubbles: true,
-          cancelable: true,
-          view: window
-        });
-        button.dispatchEvent(focusEvent);
-        await new Promise(resolve => setTimeout(resolve, 50));
-      } catch (e) {
-        console.warn('Focus event failed:', e);
-      }
-      
-      // Имитируем hover через CSS классы (если возможно)
-      try {
-        button.classList.add('hover', 'focus-visible');
-        await new Promise(resolve => setTimeout(resolve, 100));
-        button.classList.remove('hover', 'focus-visible');
-      } catch (e) {
-        // Игнорируем ошибки CSS классов
+        // Имитируем "чтение" кнопки через анализ текста
+        const buttonText = button.textContent?.trim() || '';
+        const readingTime = Math.max(buttonText.length * 10, 100); // 10ms на символ, минимум 100ms
+        console.log(`📖 Simulating reading "${buttonText}" (${readingTime}ms)`);
+        await new Promise(resolve => setTimeout(resolve, readingTime));
+        
+        // Имитируем focus через программные события (работают в фоне)
+        let focusSuccess = false;
+        try {
+          const focusEvent = new FocusEvent('focus', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          });
+          button.dispatchEvent(focusEvent);
+          await new Promise(resolve => setTimeout(resolve, 50));
+          focusSuccess = true;
+        } catch (e) {
+          console.warn('Focus event failed:', e);
+        }
+        
+        // Имитируем hover через CSS классы (если возможно)
+        let hoverSuccess = false;
+        try {
+          button.classList.add('hover', 'focus-visible');
+          await new Promise(resolve => setTimeout(resolve, 100));
+          button.classList.remove('hover', 'focus-visible');
+          hoverSuccess = true;
+        } catch (e) {
+          // Игнорируем ошибки CSS классов
+        }
+        
+        // Логируем успешную легкую имитацию
+        logger.success('ContentScript', 'Lightweight simulation completed', {
+          url: window.location.href,
+          buttonText: buttonText,
+          readingTime: readingTime,
+          focusSuccess: focusSuccess,
+          hoverSuccess: hoverSuccess,
+          textLength: buttonText.length
+        }).catch(() => {});
+        
+      } catch (error) {
+        // Логируем ошибку легкой имитации
+        logger.error('ContentScript', 'Lightweight simulation failed', {
+          url: window.location.href,
+          error: error instanceof Error ? error.message : String(error)
+        }).catch(() => {});
       }
     }
 
@@ -510,13 +558,16 @@ async function clickBoostButton(): Promise<boolean> {
     if (clickSuccess) {
       console.log('🎉 Boost button click attempts completed');
       
-      // Логируем успешный клик
+      // Логируем успешный клик с детальной аналитикой
       logger.success('ContentScript', 'Button click attempts completed', {
         url: window.location.href,
         buttonText: button.textContent?.trim(),
         methods: clickResults,
         tabActive: isTabActive,
-        simulationType: isTabActive ? 'full' : 'lightweight'
+        simulationType: isTabActive ? 'full' : 'lightweight',
+        totalMethods: clickResults.length,
+        successfulMethods: clickResults.filter(r => r.includes('SUCCESS')).length,
+        failedMethods: clickResults.filter(r => r.includes('FAILED')).length
       }).catch(() => {});
       
       // 5. АДАПТИВНОЕ ОЖИДАНИЕ ОТВЕТА
@@ -526,9 +577,13 @@ async function clickBoostButton(): Promise<boolean> {
       // Имитируем человеческое ожидание с проверками
       const checkInterval = 500;
       const maxChecks = Math.floor(waitTime / checkInterval);
+      let checksPerformed = 0;
+      let buttonStateChanges = 0;
+      let successIndicatorsFound: string[] = [];
       
       for (let i = 0; i < maxChecks; i++) {
         await new Promise(resolve => setTimeout(resolve, checkInterval));
+        checksPerformed++;
         
         // Проверяем изменения на странице
         const buttonAfterClick = findBoostButton();
@@ -536,7 +591,17 @@ async function clickBoostButton(): Promise<boolean> {
           const isStillActive = isButtonActive();
           
           if (!isStillActive) {
+            buttonStateChanges++;
             console.log('✅ Button became inactive - click likely successful');
+            
+            // Логируем успешное обнаружение изменения состояния кнопки
+            logger.success('ContentScript', 'Button state changed - click successful', {
+              url: window.location.href,
+              checksPerformed: checksPerformed,
+              waitTime: waitTime,
+              simulationType: isTabActive ? 'full' : 'lightweight',
+              detectionMethod: 'button_state_change'
+            }).catch(() => {});
             
             // Дополнительная небольшая задержка для завершения
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -551,31 +616,35 @@ async function clickBoostButton(): Promise<boolean> {
         
         const pageText = document.body.textContent?.toLowerCase() || '';
         for (const indicator of successIndicators) {
-          if (pageText.includes(indicator)) {
+          if (pageText.includes(indicator) && !successIndicatorsFound.includes(indicator)) {
+            successIndicatorsFound.push(indicator);
             console.log(`✅ Found success indicator "${indicator}" on page`);
+            
+            // Логируем успешное обнаружение индикатора
+            logger.success('ContentScript', 'Success indicator found - click successful', {
+              url: window.location.href,
+              indicator: indicator,
+              checksPerformed: checksPerformed,
+              waitTime: waitTime,
+              simulationType: isTabActive ? 'full' : 'lightweight',
+              detectionMethod: 'success_indicator'
+            }).catch(() => {});
+            
             return true;
           }
         }
       }
       
-      // Финальная проверка состояния кнопки
-      const buttonAfterClick = findBoostButton();
-      if (buttonAfterClick) {
-        const isStillActive = isButtonActive();
-        console.log('📊 Final button state after click:', {
-          found: !!buttonAfterClick,
-          active: isStillActive,
-          text: buttonAfterClick.textContent?.trim(),
-          disabled: (buttonAfterClick as HTMLButtonElement).disabled || buttonAfterClick.hasAttribute('disabled'),
-          ariaDisabled: buttonAfterClick.getAttribute('aria-disabled')
-        });
-        
-        // Если кнопка стала неактивной, считаем успехом
-        if (!isStillActive) {
-          console.log('✅ Button appears to be disabled after click - likely successful');
-          return true;
-        }
-      }
+      // Логируем результаты ожидания
+      logger.warning('ContentScript', 'Intelligent waiting completed', {
+        url: window.location.href,
+        checksPerformed: checksPerformed,
+        maxChecks: maxChecks,
+        waitTime: waitTime,
+        buttonStateChanges: buttonStateChanges,
+        successIndicatorsFound: successIndicatorsFound,
+        simulationType: isTabActive ? 'full' : 'lightweight'
+      }).catch(() => {});
       
       return true;
     } else {
